@@ -6,3 +6,9 @@
 
 # Environment configuration
 /.env
+
+/create_admin.php
+/test_connection.php
+/register_backup.php
+/forum_backup.php
+/setup_adminphptxt.txt
