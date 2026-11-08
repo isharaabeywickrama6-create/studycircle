@@ -1,0 +1,5 @@
+# Protect Gmail SMTP credentials
+/config/mail.php
+
+# Environment configuration
+/.env
