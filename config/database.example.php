@@ -2,11 +2,11 @@
 
 mysqli_report(MYSQLI_REPORT_OFF);
 
-$host = "localhost";
-$port = 3309;
-$dbname = "studycircle_db";
-$username = "root";
-$password = "";
+$host = "YOUR_DATABASE_HOST";
+$port = 3306;
+$dbname = "YOUR_DATABASE_NAME";
+$username = "YOUR_DATABASE_USERNAME";
+$password = "YOUR_DATABASE_PASSWORD";
 
 $conn = new mysqli(
     $host,
@@ -29,5 +29,3 @@ if (!$conn->set_charset("utf8mb4")) {
     http_response_code(500);
     exit("A database configuration error occurred.");
 }
-
-?>
