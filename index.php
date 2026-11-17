@@ -193,29 +193,6 @@ $userName = htmlspecialchars($userName, ENT_QUOTES, "UTF-8");
         color: #106638;
     }
 
-    .join-section {
-        position: relative;
-        overflow: hidden;
-        padding: 65px 20px;
-        background:
-            radial-gradient(circle at 90% 10%, rgba(255,255,255,0.13), transparent 25%),
-            linear-gradient(120deg, #E8F5EC, #DDF0E3);
-        border-top: 1px solid #D4E8D9;
-        border-bottom: 1px solid #D4E8D9;
-        justify-content: center;
-    }
-
-    .join-section h2 {
-        margin-top: 0;
-        font-size: clamp(25px, 3vw, 34px);
-        letter-spacing: -0.5px;
-    }
-
-    .join-section p {
-        color: #53675B;
-        margin-bottom: 22px;
-    }
-
     .join-button {
         padding: 14px 26px;
         border-radius: 10px;
@@ -504,14 +481,14 @@ $userName = htmlspecialchars($userName, ENT_QUOTES, "UTF-8");
     .section-heading .sc-dashboard-label {
         display: inline-block;
         margin-bottom: 12px;
-        padding: 6px 12px;
+        padding: 15px 55px;
         font-size: 14px;
         font-weight: 700;
         letter-spacing: 1.7px;
         text-transform: uppercase;
         color: #16834A;
         background: #E8F5EC;
-        border: 1px solid #C8E5D0;
+        border: 1px solid #a2bfaa;
         border-radius: 30px;
     }
 
@@ -569,8 +546,8 @@ $userName = htmlspecialchars($userName, ENT_QUOTES, "UTF-8");
 
         <div class="section-heading">
             <span class="sc-dashboard-label">EXPLORE OUR FEATURES</span>
-            <h2>Explore StudyCircle</h2>
-            <p>Everything you need to support your academic journey.</p>
+            <h2>Your Learning Journey Starts Here</h2>
+            <p>Become part of a community that learns and grows together. Everything you need to support your academic journey.</p>
         </div>
 
         <div class="features">
@@ -620,16 +597,6 @@ $userName = htmlspecialchars($userName, ENT_QUOTES, "UTF-8");
     </section>
 
     <?php if (!$isLoggedIn): ?>
-
-        <section class="join-section">
-
-            <h2>Your Learning Journey Starts Here</h2>
-            <p>Become part of a community that learns and grows together.</p>
-            <a href="register.php" class="join-button">
-                Get Started
-            </a>
-
-        </section>
 
     <?php endif; ?>
 
