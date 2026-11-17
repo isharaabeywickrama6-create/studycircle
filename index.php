@@ -25,7 +25,7 @@ $userName = htmlspecialchars($userName, ENT_QUOTES, "UTF-8");
     body {
         background-color: #F3F6F5;
         background-image:
-            linear-gradient(rgba(243, 246, 245, 0.5), rgba(243, 246, 245, 0.5)),
+            linear-gradient(rgba(243, 246, 245, 0.8), rgba(243, 246, 245, 0.8)),
             url("assets/studycircle1.jpg");
         background-size: cover;
         background-position: center;
@@ -113,7 +113,6 @@ $userName = htmlspecialchars($userName, ENT_QUOTES, "UTF-8");
         max-width: 750px;
         margin: 0 auto 32px;
         padding: 28px 22px;
-        background: rgba(255,255,255,0.94);
         border: 1px solid #E3EBE5;
         border-radius: 18px;
         box-shadow: 0 5px 20px rgba(28,57,41,0.05);
@@ -123,10 +122,12 @@ $userName = htmlspecialchars($userName, ENT_QUOTES, "UTF-8");
         margin-top: 0;
         font-size: clamp(25px, 3vw, 32px);
         letter-spacing: -0.6px;
+        font-weight: 700;
     }
 
     .section-heading p {
         font-size: 15px;
+        font-weight: 700;
     }
 
     .features {
@@ -293,10 +294,9 @@ $userName = htmlspecialchars($userName, ENT_QUOTES, "UTF-8");
 
     .section-heading {
         width: 100%;
-        max-width: 100%;
+        max-width: auto;
         margin: 0 auto 30px;
-        padding: 0 0 10px;
-        background: transparent;
+        padding: 40px 20px 10px;
         border: none;
         border-radius: 0;
         box-shadow: none;
@@ -334,13 +334,13 @@ $userName = htmlspecialchars($userName, ENT_QUOTES, "UTF-8");
     }
 
     .feature h3 {
-        color: #174A8B;#263445
+        color: #174A8B;
     }
 
     .feature p {
         flex-grow: 1;
         min-height: 0;
-        color: #657386;#174A8B;#263445
+        color: #657386;
     }
 
     .feature a {
@@ -348,13 +348,6 @@ $userName = htmlspecialchars($userName, ENT_QUOTES, "UTF-8");
         margin-top: 15px;
         color: #16834A;
         font-weight: 600;
-    }
-
-    .join-section {
-        padding: 55px 20px;
-        background: #E8F5EC;
-        border-top: 1px solid #DCE5DF;
-        border-bottom: 1px solid #DCE5DF;
     }
 
     @media (max-width: 1000px) {
