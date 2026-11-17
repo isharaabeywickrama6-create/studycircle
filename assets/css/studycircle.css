@@ -1334,6 +1334,7 @@ button:hover,
     background: linear-gradient(135deg, #E8F5EC, #F5FBF6);
     border-top: 1px solid #DCE5DF;
     border-bottom: 1px solid #DCE5DF;
+    justify-content: center;
 }
 
 .join-section h2 {

@@ -202,6 +202,7 @@ $userName = htmlspecialchars($userName, ENT_QUOTES, "UTF-8");
             linear-gradient(120deg, #E8F5EC, #DDF0E3);
         border-top: 1px solid #D4E8D9;
         border-bottom: 1px solid #D4E8D9;
+        justify-content: center;
     }
 
     .join-section h2 {
