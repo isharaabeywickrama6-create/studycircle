@@ -1,0 +1,51 @@
+
+name: Deploy StudyCircle to Alwaysdata
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get latest GitHub code
+        uses: actions/checkout@v4
+
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.ALWAYSDATA_SSH_KEY }}
+
+      - name: Prepare SSH connection
+        env:
+          ALWAYSDATA_HOST: ${{ secrets.ALWAYSDATA_HOST }}
+          ALWAYSDATA_USER: ${{ secrets.ALWAYSDATA_USER }}
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H "$ALWAYSDATA_HOST" >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Deploy website files
+        env:
+          ALWAYSDATA_HOST: ${{ secrets.ALWAYSDATA_HOST }}
+          ALWAYSDATA_USER: ${{ secrets.ALWAYSDATA_USER }}
+        run: |
+          rsync -rltz --no-perms \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='/config/database.php' \
+            --exclude='/config/mail.php' \
+            --exclude='/.env' \
+            --exclude='/uploads/materials/*.pdf' \
+            --exclude='/uploads/profile_pictures/***' \
+            --exclude='*_backup.php' \
+            --exclude='dashboard_backup.php' \
+            --exclude='studycircle.zip' \
+            ./ "$ALWAYSDATA_USER@$ALWAYSDATA_HOST:/home/nsbmstudycircle/www/"
