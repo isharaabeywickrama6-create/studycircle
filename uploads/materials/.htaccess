@@ -1,2 +1,6 @@
 # Block direct access to uploaded materials.
 Require all denied
+Options -Indexes
+<FilesMatch "\.(php|php[0-9]?|phtml|phar|cgi|pl|py|sh)$">
+    Require all denied
+</FilesMatch>

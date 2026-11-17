@@ -298,144 +298,418 @@ function e($value): string
 ?>
 
 <html>
-
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Join the NSBM StudyCircle Academic Forum to ask questions, share ideas and learn together.">
+
     <title>Academic Forum | NSBM StudyCircle</title>
     <link rel="stylesheet" href="assets/css/studycircle.css">
 
-    <style>
+<style>
 
-        * {
-            box-sizing: border-box;
-        }
+* {
+    box-sizing: border-box;
+}
 
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #F3F6F5;
-            color: #263445;
-        }
+body {
+    background-color: #F3F6F5;
+    background-image:
+        linear-gradient(rgba(243, 246, 245, 0.5), rgba(243, 246, 245, 0.5)),
+        url("assets/studycircle3.jpg");
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}
 
-        .hero {
-            background: linear-gradient(#106638, #16834A, #106638);
-            color: white;
-            padding: 55px 7%;
-        }
+.hero {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
 
-        .hero p {
-            margin-top: 10px;
-            max-width: 650px;
-            color: #F0F5FF;
-        }
+    min-height: 260px;
+    padding: 42px 24px;
 
-        .hero h1 {
-            font-size: 34px;
-            margin-bottom: 5px;
-        }
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 
-        .container {
-            width: 90%;
-            max-width: 1000px;
-            margin: 30px auto;
-        }
+    text-align: center;
 
-        .panel {
-            background: white;
-            padding: 24px;
-            margin-bottom: 24px;
-            border-radius: 12px;
-            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
-        }
+    background:
+        radial-gradient(circle at 12% 15%, rgba(255,255,255,0.13), transparent 28%),
+        radial-gradient(circle at 88% 85%, rgba(255,255,255,0.12), transparent 28%),
+        linear-gradient(125deg, #105A35, #16834A 55%, #21965B);
 
-        h2 {
-            color: #106638;
-            margin-top: 0;
-        }
+    box-shadow: 0 10px 25px rgba(16,102,56,0.12);
+}
 
-        label {
-            display: block;
-            font-weight: bold;
-            margin: 15px 0 7px;
-        }
+.hero::before,
+.hero::after {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    border: 2px solid rgba(255,255,255,0.13);
+    border-radius: 50%;
+    pointer-events: none;
+}
 
-        input, textarea, select {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #CBD5D1;
-            border-radius: 7px;
-            font: inherit;
-        }
+.hero::before {
+    width: 200px;
+    height: 200px;
+    top: -150px;
+    right: -60px;
+}
 
-        textarea {
-            min-height: 130px;
-            resize: vertical;
-        }
+.hero::after {
+    width: 220px;
+    height: 220px;
+    bottom: -25px;
+    left: -55px;
+}
 
-        button, .button {
-            display: inline-block;
-            background: #16834A;
-            color: white;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 7px;
-            text-decoration: none;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 16px;
-        }
+.hero h2 {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto 12px;
 
-        button:hover, .button:hover {
-            background: #106638;
-        }
+    color: #FFFFFF;
+    font-size: clamp(27px, 3.5vw, 36px);
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: -0.5px;
+    text-align: center;
+}
 
-        .discussion {
-            border: 1px solid #E1E8E4;
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 16px;
-            overflow-wrap: anywhere;
-        }
+.hero p {
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
 
-        .discussion h3 {
-            margin-top: 0;
-            color: #174A8B;
-        }
+    color: #EAF4ED;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.7;
+    text-align: center;
+}
 
-        .meta {
-            color: #657386;
-            font-size: 14px;
-            margin-bottom: 14px;
-        }
+.container {
+    width: 92%;
+    max-width: 1200px;
+    margin: 38px auto;
+}
 
-        .notice {
-            padding: 13px;
-            border-radius: 7px;
-            margin-bottom: 18px;
-            background: #E8F5EC;
-        }
+.panel {
+    padding: 28px;
+    margin-bottom: 26px;
 
-        .notice.error {
-            background: #FCE8E6;
-            color: #8A1C13;
-        }
+    background: #FFFFFF;
+    border: 1px solid #DCE5DF;
+    border-radius: 16px;
 
-        @media (max-width: 600px) {
-            .container {
-                width: 94%;
-                margin: 18px auto;
-            }
+    box-shadow: 0 5px 18px rgba(38,52,69,0.055);
+}
 
-            .panel {
-                padding: 17px;
-            }
+.panel h2 {
+    margin-top: 0;
+    margin-bottom: 12px;
 
-            nav a {
-                display: inline-block;
-                margin: 5px 12px 5px 0;
-            }
-        }
+    color: #106638;
+    font-size: 22px;
+    font-weight: 800;
+}
 
-    </style>
+.panel > p {
+    color: #657386;
+    font-size: 14px;
+}
+
+label {
+    display: block;
+    margin: 18px 0 8px;
+
+    color: #263445;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+input,
+textarea,
+select {
+    display: block;
+    width: 100%;
+    padding: 13px 14px;
+
+    color: #263445;
+    background: #FFFFFF;
+
+    border: 1px solid #DCE5DF;
+    border-radius: 9px;
+
+    font-family: inherit;
+    font-size: 14px;
+
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    border-color: #16834A;
+    box-shadow: 0 0 0 3px rgba(22,131,74,0.10);
+}
+
+textarea {
+    min-height: 130px;
+    resize: vertical;
+    line-height: 1.6;
+}
+
+button,
+.button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 12px 21px;
+    margin-top: 16px;
+
+    color: #FFFFFF;
+    background: #16834A;
+
+    border: none;
+    border-radius: 9px;
+
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+
+    text-decoration: none;
+    cursor: pointer;
+
+    transition: background 0.2s ease,
+                transform 0.2s ease,
+                box-shadow 0.2s ease;
+}
+
+button:hover,
+.button:hover {
+    background: #106638;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 12px rgba(16,102,56,0.15);
+}
+
+.notice {
+    padding: 14px 16px;
+    margin-bottom: 20px;
+
+    color: #106638;
+    background: #E8F5EC;
+
+    border: 1px solid #C8E5D0;
+    border-radius: 9px;
+
+    font-size: 14px;
+}
+
+.notice.error {
+    color: #8A1C13;
+    background: #FCE8E6;
+    border-color: #F3C6C2;
+}
+
+.discussion {
+    padding: 23px;
+    margin-top: 18px;
+
+    background: #FFFFFF;
+    border: 1px solid #DCE5DF;
+    border-left: 4px solid #16834A;
+    border-radius: 12px;
+
+    overflow-wrap: anywhere;
+
+    transition: box-shadow 0.25s ease,
+                border-color 0.25s ease;
+}
+
+.discussion:hover {
+    border-color: #B8DCC4;
+    box-shadow: 0 6px 18px rgba(38,52,69,0.07);
+}
+
+.discussion h3 {
+    margin: 0 0 10px;
+
+    color: #174A8B;
+    font-size: 19px;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.discussion p {
+    color: #455568;
+    font-size: 14px;
+    line-height: 1.8;
+    overflow-wrap: anywhere;
+}
+
+.meta {
+    margin-bottom: 13px;
+
+    color: #657386;
+    font-size: 12px;
+    line-height: 1.7;
+}
+
+.discussion .discussion {
+    padding: 17px;
+    margin: 18px 0 0 15px;
+
+    background: #F3F6F5;
+    border: 1px solid #DCE5DF;
+    border-left: 3px solid #174A8B;
+    border-radius: 10px;
+
+    box-shadow: none;
+}
+
+.discussion .discussion:hover {
+    background: #EEF4F0;
+}
+
+.discussion .discussion strong {
+    color: #174A8B;
+    font-size: 14px;
+}
+
+.discussion .discussion p {
+    margin-bottom: 0;
+}
+
+.discussion form {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid #E5ECE7;
+}
+
+@media (max-width: 768px) {
+
+    .container {
+        width: 94%;
+        margin: 25px auto;
+    }
+
+    .panel {
+        padding: 22px;
+    }
+
+    .hero {
+        min-height: 250px;
+        padding: 38px 20px;
+    }
+
+    .hero h2 {
+        font-size: 30px;
+    }
+
+    .hero p {
+        max-width: 560px;
+        font-size: 13px;
+    }
+
+    .discussion {
+        padding: 19px;
+    }
+}
+
+@media (max-width: 600px) {
+
+    .container {
+        width: 94%;
+        margin: 20px auto;
+    }
+
+    .hero {
+        min-height: 240px;
+        padding: 35px 18px;
+    }
+
+    .hero h2 {
+        font-size: 27px;
+    }
+
+    .hero p {
+        font-size: 13px;
+        line-height: 1.6;
+    }
+
+    .panel {
+        padding: 18px;
+        border-radius: 13px;
+    }
+
+    .panel h2 {
+        font-size: 19px;
+    }
+
+    .discussion {
+        padding: 17px;
+    }
+
+    .discussion h3 {
+        font-size: 17px;
+    }
+
+    .discussion .discussion {
+        margin-left: 8px;
+        padding: 14px;
+    }
+
+    button,
+    .button {
+        max-width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        transition: none !important;
+    }
+}
+
+.sc-forum-label {
+    display: inline-block;
+    margin-bottom: 12px;
+    padding: 11px 18px;
+    color: #106638;
+    background: #f1f5f2;
+    border: 1px solid #DCE5DF;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1.4px;
+    text-transform:none;
+}
+.sc-forum-label1 {
+    display: inline-block;
+    margin-bottom: 12px;
+    padding: 11px 18px;
+    color: #263445;
+    background: #eceeef;
+    border: 1px solid #bfd7f7;
+    border-radius: 30px;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 1.4px;
+    text-transform:none;
+}
+
+</style>
 
 </head>
 
@@ -445,7 +719,7 @@ function e($value): string
 
 <section class="hero">
 
-    <h1>Discussion Forum</h1>
+    <h2>Discussion Forum</h2>
     <p>
         Welcome to the NSBM StudyCircle Academic Forum! This is a place where 
         students can ask questions, share ideas, and discuss academic subjects 
@@ -458,7 +732,6 @@ function e($value): string
 <main class="container">
 
     <section class="panel sc-card">
-
         <h2>Welcome to the Academic Forum</h2>
 
         <p>Ask questions, share ideas and discuss your academic subjects
@@ -472,7 +745,7 @@ function e($value): string
 
         <?php if ($isStudent): ?>
 
-            <h2>Start a Discussion</h2>
+            <span class="sc-forum-label">Start a Discussion</span>
 
             <form method="POST" action="forum.php">
 
@@ -533,7 +806,7 @@ function e($value): string
 
     <section class="panel sc-card">
 
-        <h2>Recent Discussions</h2>
+        <span class="sc-forum-label">Recent Discussions</span>
 
         <?php if (!$discussions): ?>
 

@@ -16,6 +16,8 @@ $scName = is_string($scNameInput)
     : 'Student';
 
 $scIsAdmin = ($scRole === 'admin');
+$scProfileImage = $_SESSION['profile_image'] ?? '';
+$scProfileImage = is_string($scProfileImage) ? $scProfileImage : '';
 $scIsStudent = ($scRole === 'student');
 
 $scBase = $scIsAdmin ? '../' : '';
@@ -79,11 +81,9 @@ $scLogoutLink = $scBase . 'logout.php';
 
             <?php if ($scIsStudent): ?>
 
-                <a href="dashboard.php">My Dashboard</a>
+                <a href="upload_material.php">Upload Material</a>
 
-                <a class="sc-nav-cta" href="upload_material.php">
-                    Upload Material
-                </a>
+                <a href="dashboard.php">My Dashboard</a>
 
             <?php endif; ?>
 
@@ -102,7 +102,21 @@ $scLogoutLink = $scBase . 'logout.php';
         <details class="sc-account-menu">
 
             <summary title="More options" aria-label="More options">
-                <span class="sc-menu-dots">⋮</span>
+
+                <?php if ($scProfileImage !== ''): ?>
+
+                    <img
+                        src="<?= $scBase ?>uploads/profile_pictures/<?= rawurlencode(basename($scProfileImage)) ?>"
+                        alt="Profile"
+                        class="sc-header-avatar"
+                    >
+
+                <?php else: ?>
+
+                    <span class="sc-menu-dots">⋮</span>
+
+                <?php endif; ?>
+
             </summary>
 
             <div class="sc-dropdown">
@@ -110,6 +124,7 @@ $scLogoutLink = $scBase . 'logout.php';
                 <?php if ($scIsStudent): ?>
 
                     <a href="dashboard.php">My Account</a>
+                    <a href="<?= $scBase ?>profile.php">My Profile</a>
 
                     <a href="delete_account.php"
                        class="sc-delete-link">

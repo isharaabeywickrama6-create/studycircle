@@ -717,46 +717,109 @@ if (
         box-sizing: border-box; 
     }
 
-    body { 
-        margin: 0; 
-        font-family: Arial, sans-serif; 
-        background: #F3F6F5; color: #263445;
+    body {
+        background-color: #F3F6F5;
+        background-image:
+            linear-gradient(rgba(243, 246, 245, 0.5), rgba(243, 246, 245, 0.5)),
+            url("assets/studycircle4.jpg");
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
     }
 
     .hero {
-        background: linear-gradient(#106638, #16834A, #106638);
-        color: white;
-        padding: 55px 7%;
-        }
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
 
-    .hero p {
-        margin-top: 10px;
-        max-width: 650px;
-        color: #F0F5FF;
+        min-height: 260px;
+        padding: 42px 24px;
+
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+
+        text-align: center;
+
+        background:
+            radial-gradient(circle at 12% 15%, rgba(255,255,255,0.13), transparent 28%),
+            radial-gradient(circle at 88% 85%, rgba(255,255,255,0.12), transparent 28%),
+            linear-gradient(125deg, #105A35, #16834A 55%, #21965B);
+
+        box-shadow: 0 10px 25px rgba(16,102,56,0.12);
     }
 
-    .hero h1 {
-        font-size: 34px;
-        margin-bottom: 5px;
+    .hero::before,
+    .hero::after {
+        content: "";
+        position: absolute;
+        z-index: -1;
+        border: 4px solid rgba(255,255,255,0.13);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .hero::before {
+        width: 300px;
+        height: 300px;
+        top: -150px;
+        right: -60px;
+    }
+
+    .hero::after {
+        width: 220px;
+        height: 220px;
+        bottom: -125px;
+        left: -55px;
+    }
+    
+    .hero h2 {
+        width: 100%;
+        max-width: 800px;
+        margin: 0 auto 12px;
+
+        color: #FFFFFF;
+        font-size: clamp(27px, 3.5vw, 36px);
+        font-weight: 600;
+        line-height: 1.3;
+        letter-spacing: -0.5px;
+        text-align: center;
+    }
+
+    .hero p {
+        width: 100%;
+        max-width: 1000px;
+        margin: 0 auto;
+
+        color: #EAF4ED;
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 1.7;
+        text-align: center;
     }
 
     .container { 
         width: 90%; 
-        max-width: 1000px; 
+        max-width: 1200px; 
         margin: 30px auto; 
     }
     
+    h3 {
+        margin-top: 0;
+        margin-bottom: 12px;
+        color: #106638;
+        font-size: 22px;
+        font-weight: 600;
+    }
+
     .panel, .group { 
         background: white; 
         padding: 24px; 
         border-radius: 12px; 
         margin-bottom: 22px; 
         box-shadow: 0 3px 12px #0000000A; 
-    }
-
-    h2 { 
-        color: #106638; 
-        margin-top: 0; 
+        font-weight: 500;
     }
 
     label { 
@@ -845,6 +908,33 @@ if (
         border-top: 1px solid #DCE5DF;
     }
 
+    .sc-studygroups-label {
+        display: inline-block;
+        margin-bottom: 12px;
+        padding: 6px 12px;
+        color: #106638;
+        background: #f1f5f2;
+        border: 1px solid #DCE5DF;
+        border-radius: 30px;
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 1.4px;
+        text-transform:none;
+    }
+    .sc-studygroups-label1 {
+        display: inline-block;
+        margin-bottom: 12px;
+        padding: 6px 12px;
+        color: #263445;
+        background: #f1f5f2;
+        border: 1px solid #DCE5DF;
+        border-radius: 30px;
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: 1.4px;
+        text-transform:none;
+    }
+
     </style>
 
 </head>
@@ -855,7 +945,7 @@ if (
 
 <section class="hero">
 
-    <h1>Study Groups</h1>
+    <h2>Study Groups</h2>
 
     <p>
         Welcome to the NSBM StudyCircle Study Groups! This is a place where 
@@ -870,7 +960,7 @@ if (
 
         <section class="panel sc-card">
 
-            <h2>Edit Study Session</h2>
+            <h3>Edit Study Session</h3>
 
             <p>Update your study session details below.</p>
 
@@ -994,7 +1084,7 @@ if (
 
     <section class="panel sc-card">
 
-        <h2>Study Groups</h2>
+        <h3>Study Groups</h3>
 
         <p>Create a group for your subject or join a group created by another student.</p>
 
@@ -1008,7 +1098,7 @@ if (
 
         <?php if ($isStudent): ?>
 
-        <h2>Create a Study Group</h2>
+        <span class="sc-studygroups-label">Create a Study Group</span>
 
         <form method="POST" action="study_groups.php">
 
@@ -1052,7 +1142,7 @@ if (
 
         <hr style="margin: 30px 0;">
 
-        <h2>Request a New Subject</h2>
+        <span class="sc-studygroups-label">Request a New Subject</span>
 
         <p>
             Can't find your subject in the dropdown?
@@ -1104,7 +1194,7 @@ if (
 
     <section class="panel sc-card">
 
-        <h2>Available Study Groups</h2>
+        <h3>Available Study Groups</h3>
 
         <?php if (!$groups): ?>
 
@@ -1136,7 +1226,7 @@ if (
 
                         <hr style="margin: 20px 0;">
                         
-                        <h4>Create a Study Session</h4>
+                        <span class="sc-studygroups-label">Create a Study Session</span>
 
                         <form method="POST" action="study_groups.php">
 
@@ -1273,7 +1363,7 @@ if (
 
         <section class="panel sc-card">
 
-        <h2>My Study Sessions</h2>
+        <h3>My Study Sessions</h3>
 
         <p>Study sessions created in groups you have joined.</p>
 

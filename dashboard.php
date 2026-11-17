@@ -1,4 +1,5 @@
 <?php
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -16,6 +17,35 @@ if (
 
 $user_id = (int) $_SESSION["user_id"];
 $student_name = $_SESSION["name"] ?? "Student";
+$profile_image = "";
+
+$stmt = $conn->prepare(
+    "SELECT profile_image FROM users WHERE user_id = ?"
+);
+
+if ($stmt) {
+    $stmt->bind_param("i", $user_id);
+
+    if ($stmt->execute()) {
+        $profile_result = $stmt->get_result();
+        $profile_data = $profile_result->fetch_assoc();
+
+        $profile_image = $profile_data["profile_image"] ?? "";
+    }
+
+    $stmt->close();
+}
+
+$profile_image = is_string($profile_image)
+    ? basename($profile_image)
+    : "";
+
+$profile_image_path = __DIR__ . "/uploads/profile_pictures/" . $profile_image;
+
+$has_profile_image = (
+    $profile_image !== "" &&
+    is_file($profile_image_path)
+);
 
 $material_counts = [
     "total" => 0,
@@ -117,433 +147,271 @@ if ($stmt) {
 } else {
     error_log("Student recent uploads prepare failed: " . $conn->error);
 }
+
 ?>
 
 <html>
 
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Student Dashboard | StudyCircle</title>
     <link rel="stylesheet" href="assets/css/studycircle.css">
-
-    <style>
-
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: Arial, sans-serif;
-            background: #F3F6F5;
-            color: #263445;
-        }
-
-        .container {
-            width: 86%;
-            max-width: 1200px;
-            margin: 35px auto;
-        }
-
-        .welcome {
-            background: white;
-            padding: 28px;
-            border-radius: 12px;
-            border-left: 5px solid #16834A;
-            margin-bottom: 25px;
-            box-shadow: 0 3px 12px #00000008;
-        }
-
-        .welcome h1 {
-            color: #123665;
-            margin-bottom: 10px;
-            font-size: 27px;
-        }
-
-        .welcome p {
-            color: #657386;
-            line-height: 1.6;
-        }
-
-        .section-title {
-            color: #123665;
-            margin: 28px 0 16px;
-            font-size: 21px;
-        }
-
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(5, minmax(0, 1fr));
-            gap: 16px;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 22px 18px;
-            border-radius: 12px;
-            box-shadow: 0 3px 12px #00000008;
-            border-bottom: 3px solid #16834A;
-        }
-
-        .stat-card p {
-            color: #657386;
-            font-size: 13px;
-            margin-bottom: 12px;
-        }
-
-        .stat-card h2 {
-            color: #123665;
-            font-size: 28px;
-        }
-
-        .actions {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 16px;
-        }
-
-        .action-card {
-            display: block;
-            background: white;
-            padding: 22px;
-            border-radius: 12px;
-            text-decoration: none;
-            color: #263445;
-            box-shadow: 0 3px 12px #00000008;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .action-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 18px #00000012;
-        }
-
-        .action-card h3 {
-            color: #16834A;
-            font-size: 17px;
-            margin-bottom: 9px;
-        }
-
-        .action-card p {
-            color: #657386;
-            font-size: 13px;
-            line-height: 1.6;
-        }
-
-        .table-container {
-            background: white;
-            border-radius: 12px;
-            padding: 22px;
-            overflow-x: auto;
-            box-shadow: 0 3px 12px #00000008;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-        }
-
-        th, td {
-            padding: 15px 12px;
-            border-bottom: 1px solid #E9EDF0;
-            font-size: 14px;
-        }
-
-        th {
-            color: #123665;
-            background: #F3F6F5;
-        }
-
-        .status {
-            display: inline-block;
-            padding: 6px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-            text-transform: capitalize;
-        }
-
-        .pending {
-            background: #FFF1CC;
-            color: #8A6100;
-        }
-
-        .approved {
-            background: #E8F5EC;
-            color: #106638;
-        }
-
-        .rejected {
-            background: #FCE8E8;
-            color: #A32626;
-        }
-
-        .empty {
-            color: #657386;
-            padding: 20px 0;
-            line-height: 1.6;
-        }
-
-        @media (max-width: 1000px) {
-            .stats {
-                grid-template-columns: repeat(3, minmax(0, 1fr));
-            }
-
-            .actions {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-        }
-
-        @media (max-width: 600px) {
-            .container {
-                width: 92%;
-                margin-top: 20px;
-            }
-
-            nav {
-                padding: 18px 5%;
-            }
-
-            .stats {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
-
-            .actions {
-                grid-template-columns: 1fr;
-            }
-
-            .welcome h1 {
-                font-size: 23px;
-            }
-
-            .stat-card {
-                padding: 18px 14px;
-            }
-        }
-
-        .welcome {
-            border-left: 5px solid var(--sc-green);
-            padding: 32px;
-            box-shadow: var(--sc-shadow);
-        }
-
-        .welcome h1 {
-            font-size: clamp(24px, 3vw, 32px);
-            color: var(--sc-blue);
-        }
-
-        .section-title {
-            font-size: 22px;
-            font-weight: 700;
-            margin-top: 35px;
-            margin-bottom: 18px;
-            color: var(--sc-blue);
-        }
-
-        .stat-card {
-            border: 1px solid var(--sc-border);
-            border-bottom: 4px solid var(--sc-green);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--sc-shadow);
-        }
-
-        .stat-card h2 {
-            font-size: 32px;
-            color: var(--sc-green-dark);
-        }
-
-        .action-card {
-            border: 1px solid var(--sc-border);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .action-card:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--sc-shadow);
-        }
-
-        .action-card h3 {
-            color: var(--sc-blue);
-        }
-
-        .table-container {
-            border: 1px solid var(--sc-border);
-        }
-
-        th {
-            background: var(--sc-green-soft);
-        }
-
-        @media (max-width: 600px) {
-            .welcome {
-                padding: 22px;
-            }
-
-            .stat-card h2 {
-                font-size: 25px;
-            }
-        }
-
-    </style>
-
 </head>
 
 <body>
 
 <?php include "includes/header.php"; ?>
 
-<main class="container">
+<main class="sc-dashboard">
 
-    <section class="welcome sc-card">
+    <section class="sc-dashboard-welcome">
 
-        <h1>
-            Welcome back,
-            <?= htmlspecialchars($student_name, ENT_QUOTES, "UTF-8") ?>!
-        </h1>
+        <div class="sc-welcome-content">
+            <span class="sc-dashboard-label">STUDENT DASHBOARD</span>
 
-        <p>
-            Welcome to your StudyCircle dashboard.
-            Track your study materials and continue learning with your
-            university community.
-        </p>
+            <h1>
+                Welcome back,
+                <?= htmlspecialchars($student_name, ENT_QUOTES, "UTF-8") ?>!
+            </h1>
 
-    </section>
-
-    <h2 class="section-title">Your Overview</h2>
-
-    <section class="stats">
-
-        <div class="stat-card sc-card">
-            <p>Total Uploads</p>
-            <h2><?= (int) $material_counts["total"] ?></h2>
-        </div>
-
-        <div class="stat-card">
-            <p>Pending</p>
-            <h2><?= (int) $material_counts["pending"] ?></h2>
-        </div>
-
-        <div class="stat-card">
-            <p>Approved</p>
-            <h2><?= (int) $material_counts["approved"] ?></h2>
-        </div>
-
-        <div class="stat-card">
-            <p>Rejected</p>
-            <h2><?= (int) $material_counts["rejected"] ?></h2>
-        </div>
-
-        <div class="stat-card">
-            <p>Total Downloads</p>
-            <h2><?= $total_downloads ?></h2>
-        </div>
-
-    </section>
-
-    <h2 class="section-title">Quick Access</h2>
-
-    <section class="actions">
-
-        <a href="upload_material.php" class="action-card  sc-card">
-            <h3>Upload Materials</h3>
-            <p>Share your notes and educational resources with other students.</p>
-        </a>
-
-        <a href="materials.php" class="action-card">
-            <h3>Browse Materials</h3>
-            <p>Find and download approved study resources.</p>
-        </a>
-
-        <a href="forum.php" class="action-card">
-            <h3>Discussion Forum</h3>
-            <p>Ask academic questions and learn from other students.</p>
-        </a>
-
-        <a href="study_groups.php" class="action-card">
-            <h3>Study Groups</h3>
-            <p>Explore groups and connect with fellow learners.</p>
-        </a>
-
-    </section>
-
-    <h2 class="section-title">My Recent Uploads</h2>
-
-    <section class="table-container sc-card">
-
-        <?php if (count($recent_uploads) > 0): ?>
-
-            <table>
-                <thead>
-                    <tr>
-                        <th>Material Title</th>
-                        <th>Subject</th>
-                        <th>Uploaded Date</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    <?php foreach ($recent_uploads as $material): ?>
-                        <?php
-                        $status = strtolower($material["status"] ?? "pending");
-                        $allowed_statuses = ["pending", "approved", "rejected"];
-
-                        if (!in_array($status, $allowed_statuses, true)) {
-                            $status = "pending";
-                        }
-                        ?>
-
-                        <tr>
-                            <td>
-                                <?= htmlspecialchars(
-                                    $material["title"],
-                                    ENT_QUOTES,
-                                    "UTF-8"
-                                ) ?>
-                            </td>
-
-                            <td>
-                                <?= htmlspecialchars(
-                                    $material["subject_name"] ?? "Not specified",
-                                    ENT_QUOTES,
-                                    "UTF-8"
-                                ) ?>
-                            </td>
-
-                            <td>
-                                <?= htmlspecialchars(
-                                    $material["created_at"] ?? "",
-                                    ENT_QUOTES,
-                                    "UTF-8"
-                                ) ?>
-                            </td>
-
-                            <td>
-                                <span class="status <?= $status ?>">
-                                    <?= htmlspecialchars($status) ?>
-                                </span>
-                            </td>
-                        </tr>
-
-                    <?php endforeach; ?>
-
-                </tbody>
-                
-            </table>
-
-        <?php else: ?>
-
-            <p class="empty">
-                You haven't uploaded any materials yet.
-                Start by sharing your first study resource!
+            <p>
+                Your learning journey continues here.
+                Explore study resources, share knowledge and connect
+                with your university community.
             </p>
 
-            <a href="upload_material.php">Upload your first material</a>
+            <a href="upload_material.php" class="sc-dashboard-button">
+                + Upload Study Material
+            </a>
+        </div>
 
-        <?php endif; ?>
+        <div class="sc-welcome-decoration">
+
+            <?php if ($has_profile_image): ?>
+
+                <img
+                    src="uploads/profile_pictures/<?= rawurlencode($profile_image) ?>"
+                    alt="Your profile picture"
+                    class="sc-welcome-profile-picture"
+                >
+
+            <?php else: ?>
+
+                <div class="sc-welcome-profile-placeholder">
+                    <?= htmlspecialchars(
+                        strtoupper(substr($student_name, 0, 1)),
+                        ENT_QUOTES,
+                        "UTF-8"
+                    ) ?>
+                </div>
+
+            <?php endif; ?>
+
+        </div>
+
+    </section>
+
+    <section class="sc-dashboard-section">
+
+        <div class="sc-dashboard-heading">
+            <div>
+                <h2>Your Overview</h2>
+                <p>A quick summary of your StudyCircle activity.</p>
+            </div>
+        </div>
+
+        <div class="sc-dashboard-stats">
+
+            <article class="sc-dashboard-stat">
+                <div class="sc-stat-icon">📁</div>
+                <p>Total Uploads</p>
+                <h3><?= (int) $material_counts["total"] ?></h3>
+                <span>Materials you shared</span>
+            </article>
+
+            <article class="sc-dashboard-stat">
+                <div class="sc-stat-icon">⏳</div>
+                <p>Pending</p>
+                <h3><?= (int) $material_counts["pending"] ?></h3>
+                <span>Waiting for approval</span>
+            </article>
+
+            <article class="sc-dashboard-stat">
+                <div class="sc-stat-icon">✓</div>
+                <p>Approved</p>
+                <h3><?= (int) $material_counts["approved"] ?></h3>
+                <span>Available to students</span>
+            </article>
+
+            <article class="sc-dashboard-stat">
+                <div class="sc-stat-icon">✕</div>
+                <p>Rejected</p>
+                <h3><?= (int) $material_counts["rejected"] ?></h3>
+                <span>Not approved materials</span>
+            </article>
+
+            <article class="sc-dashboard-stat">
+                <div class="sc-stat-icon">⬇</div>
+                <p>Total Downloads</p>
+                <h3><?= (int) $total_downloads ?></h3>
+                <span>Your resource downloads</span>
+            </article>
+
+        </div>
+
+    </section>
+
+    <section class="sc-dashboard-section">
+
+        <div class="sc-dashboard-heading">
+            <div>
+                <h2>Quick Access</h2>
+                <p>Continue learning with these StudyCircle features.</p>
+            </div>
+        </div>
+
+        <div class="sc-dashboard-actions">
+
+            <a href="upload_material.php" class="sc-dashboard-action">
+                <span class="sc-action-icon">📤</span>
+                <div>
+                    <h3>Upload Materials</h3>
+                    <p>Share your notes and educational resources.</p>
+                </div>
+                <span class="sc-action-arrow">→</span>
+            </a>
+
+            <a href="materials.php" class="sc-dashboard-action">
+                <span class="sc-action-icon">📖</span>
+                <div>
+                    <h3>Browse Materials</h3>
+                    <p>Find and download approved study resources.</p>
+                </div>
+                <span class="sc-action-arrow">→</span>
+            </a>
+
+            <a href="forum.php" class="sc-dashboard-action">
+                <span class="sc-action-icon">💬</span>
+                <div>
+                    <h3>Discussion Forum</h3>
+                    <p>Ask questions and share academic knowledge.</p>
+                </div>
+                <span class="sc-action-arrow">→</span>
+            </a>
+
+            <a href="study_groups.php" class="sc-dashboard-action">
+                <span class="sc-action-icon">👥</span>
+                <div>
+                    <h3>Study Groups</h3>
+                    <p>Connect and learn with other students.</p>
+                </div>
+                <span class="sc-action-arrow">→</span>
+            </a>
+
+        </div>
+
+    </section>
+
+    <section class="sc-dashboard-section">
+
+        <div class="sc-dashboard-heading">
+            <div>
+                <h2>My Recent Uploads</h2>
+                <p>Check the latest materials you have shared.</p>
+            </div>
+
+            <a href="upload_material.php" class="sc-view-link">
+                Upload New +
+            </a>
+        </div>
+
+        <div class="sc-dashboard-table">
+
+            <?php if (count($recent_uploads) > 0): ?>
+
+                <div class="sc-table-scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Material Title</th>
+                                <th>Subject</th>
+                                <th>Uploaded Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            <?php foreach ($recent_uploads as $material): ?>
+
+                                <?php
+                                $status = strtolower($material["status"] ?? "pending");
+                                $allowed_statuses = ["pending", "approved", "rejected"];
+
+                                if (!in_array($status, $allowed_statuses, true)) {
+                                    $status = "pending";
+                                }
+                                ?>
+
+                                <tr>
+                                    <td>
+                                        <strong>
+                                            <?= htmlspecialchars(
+                                                $material["title"] ?? "",
+                                                ENT_QUOTES,
+                                                "UTF-8"
+                                            ) ?>
+                                        </strong>
+                                    </td>
+
+                                    <td>
+                                        <?= htmlspecialchars(
+                                            $material["subject_name"] ?? "Not specified",
+                                            ENT_QUOTES,
+                                            "UTF-8"
+                                        ) ?>
+                                    </td>
+
+                                    <td>
+                                        <?= htmlspecialchars(
+                                            $material["created_at"] ?? "",
+                                            ENT_QUOTES,
+                                            "UTF-8"
+                                        ) ?>
+                                    </td>
+
+                                    <td>
+                                        <span class="sc-status sc-status-<?= $status ?>">
+                                            <?= htmlspecialchars($status, ENT_QUOTES, "UTF-8") ?>
+                                        </span>
+                                    </td>
+                                </tr>
+
+                            <?php endforeach; ?>
+
+                        </tbody>
+                    </table>
+                </div>
+
+            <?php else: ?>
+
+                <div class="sc-dashboard-empty">
+                    <span>👤</span>
+                    <h3>No uploads yet</h3>
+                    <p>
+                        You haven't uploaded any study materials.
+                        Start sharing your first resource with other students!
+                    </p>
+                    <a href="upload_material.php" class="sc-dashboard-button">
+                        Upload Your First Material
+                    </a>
+                </div>
+
+            <?php endif; ?>
+
+        </div>
 
     </section>
 

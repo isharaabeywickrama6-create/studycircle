@@ -391,6 +391,10 @@ $success = isset($_GET["success"]) && $_GET["success"] === "1";
 <html>
 
 <head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Upload Study Material | StudyCircle</title>
     <link rel="stylesheet" href="assets/css/studycircle.css">
 
@@ -403,65 +407,246 @@ $success = isset($_GET["success"]) && $_GET["success"] === "1";
         }
 
         body {
+            background-color: #F3F6F5;
+            background-image:
+                linear-gradient(rgba(243, 246, 245, 0.5), rgba(243, 246, 245, 0.5)),
+                url("assets/studycircle1.jpg");
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+
+        .hero {
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+            text-justify: center;
+            padding: 55px max(7%, calc((100% - 1150px) / 2));
+            color: white;
+            background: linear-gradient(120deg, #106638, #16834A);
+        }
+
+        .hero::after {
+            content: "";
+            position: absolute;
+            width: 260px;
+            height: 260px;
+            right: 8%;
+            top: -100px;
+            border: 35px solid rgba(255,255,255,0.07);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .hero h1 {
+            margin: 0 0 10px;
+            color: #FFFFFF;
+            font-size: 34px;
+            line-height: 1.3;
+            text-justify: center;
+        }
+
+        .hero p {
+            max-width: 680px;
             margin: 0;
-            font-family: Arial, sans-serif;
-            background: #F3F6F5;
-            color: #263445;
-            line-height: 1.6;
+            color: #E8F5EC;
+            font-size: 16px;
+            text-justify: center;
         }
 
         .container {
-            max-width: 760px;
-            width: 90%;
-            margin: 40px auto;
+            max-width: 1200px;
+            width: 92%;
+            margin: 38px auto 55px;
         }
 
-        .heading {
-            margin-bottom: 22px;
-        }
-
-        .heading h1 {
-            margin-bottom: 6px;
+        .page-intro h2 {
+            margin: 0 0 5px;
             color: #174A8B;
+            font-size: 23px;
         }
 
-        .heading p {
+        .page-intro p {
+            margin: 0;
             color: #657386;
+            font-size: 14px;
+        }
+
+        .notice {
+            display: flex;
+            align-items: flex-start;
+            gap: 13px;
+            padding: 17px 19px;
+            margin-bottom: 23px;
+            background: #E8F5EC;
+            color: #106638;
+            border: 1px solid #CDE7D5;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+
+        .notice-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            width: 30px;
+            height: 30px;
+            background: #FFFFFF;
+            border-radius: 50%;
+            font-size: 16px;
+        }
+
+        .notice strong {
+            display: block;
+            margin-bottom: 3px;
         }
 
         .form-card {
-            background: white;
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 4px 18px #2634450D;
+            padding: 32px;
+            background: #FFFFFF;
+            border: 1px solid #DCE5DF;
+            border-radius: 14px;
+            box-shadow: 0 5px 20px rgba(38,52,69,0.06);
+        }
+
+        .form-card-header {
+            padding-bottom: 20px;
+            margin-bottom: 25px;
+            border-bottom: 1px solid #E8EEEA;
+        }
+
+        .form-card-header h2 {
+            margin: 0 0 5px;
+            color: #263445;
+            font-size: 21px;
+        }
+
+        .form-card-header p {
+            margin: 0;
+            color: #657386;
+            font-size: 14px;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 23px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #263445;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .required {
+            color: #D13B45;
+        }
+
+        input[type="text"],
+        textarea,
+        select {
+            display: block;
+            width: 100%;
+            padding: 13px 14px;
+            color: #263445;
+            background: #FFFFFF;
+            border: 1px solid #DCE5DF;
+            border-radius: 8px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        input[type="text"]::placeholder,
+        textarea::placeholder {
+            color: #9AA6B2;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #16834A;
+            box-shadow: 0 0 0 3px rgba(22,131,74,0.10);
+        }
+
+        textarea {
+            min-height: 135px;
+            resize: vertical;
+        }
+
+        select {
+            cursor: pointer;
+        }
+
+        .hint {
+            margin: 7px 0 0;
+            color: #657386;
+            font-size: 12px;
+        }
+
+        #new-subject-box {
+            padding: 17px;
+            margin-top: 14px;
+            background: #F3F8F4;
+            border: 1px solid #DCE5DF;
+            border-radius: 9px;
+        }
+
+        .file-upload-area {
+            padding: 24px;
+            background: #F8FBF9;
+            border: 2px dashed #B8D5C1;
+            border-radius: 10px;
+            text-align: center;
+            transition: background 0.2s ease, border-color 0.2s ease;
+        }
+
+        .file-upload-area:hover {
+            background: #F0F8F2;
+            border-color: #16834A;
+        }
+
+        .upload-icon {
+            display: block;
+            margin-bottom: 9px;
+            color: #16834A;
+            font-size: 32px;
+        }
+
+        .file-upload-area p {
+            margin: 0 0 12px;
+            color: #657386;
+            font-size: 13px;
         }
 
         input[type="file"] {
             display: block;
             width: 100%;
-            padding: 12px;
-            margin-top: 8px;
-            background: #F3F6F5;
-            border: 1px solid #CCD4D9;
-            border-radius: 8px;
+            padding: 10px;
+            margin-top: 10px;
             color: #263445;
-            font-size: 14px;
+            background: #FFFFFF;
+            border: 1px solid #DCE5DF;
+            border-radius: 8px;
+            font-size: 13px;
             cursor: pointer;
         }
 
         input[type="file"]::file-selector-button {
-            background: #16834A;
-            color: #FFFFFF;
-            border: none;
-            padding: 10px 16px;
+            padding: 9px 14px;
             margin-right: 12px;
+            color: #FFFFFF;
+            background: #16834A;
+            border: none;
             border-radius: 6px;
-            font-size: 14px;
-            font-weight: bold;
+            font-size: 13px;
+            font-weight: 700;
             cursor: pointer;
         }
 
@@ -474,159 +659,117 @@ $success = isset($_GET["success"]) && $_GET["success"] === "1";
             outline-offset: 3px;
         }
 
-        label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 7px;
-        }
-
-        input[type="text"],
-        textarea,
-        select,
-        input[type="file"] {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #D7E0E5;
+        .file-info {
+            display: none;
+            padding: 10px 13px;
+            margin-top: 12px;
+            color: #106638;
+            background: #E8F5EC;
             border-radius: 7px;
-            font-size: 15px;
-            background: white;
-        }
-
-        textarea {
-            min-height: 120px;
-            resize: vertical;
-        }
-
-        input:focus,
-        textarea:focus,
-        select:focus {
-            outline: 2px solid #16834A;
-            border-color: #16834A;
-        }
-
-        .hint {
-            color: #657386;
             font-size: 13px;
-            margin-top: 5px;
+            text-align: left;
+            overflow-wrap: anywhere;
         }
 
-        button {
-            border: none;
-            border-radius: 7px;
-            padding: 13px 20px;
-            background: #16834A;
-            color: white;
-            font-size: 15px;
-            font-weight: bold;
-            cursor: pointer;
+        .submit-button {
+            display: block;
             width: 100%;
+            padding: 14px 20px;
+            margin-top: 27px;
+            color: #FFFFFF;
+            background: #16834A;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.2s ease;
         }
 
-        button:hover {
+        .submit-button:hover {
             background: #106638;
+            transform: translateY(-1px);
+        }
+
+        .submit-button:focus-visible {
+            outline: 3px solid rgba(22,131,74,0.25);
+            outline-offset: 3px;
         }
 
         .alert {
-            padding: 14px;
+            padding: 15px 18px;
             margin-bottom: 20px;
-            border-radius: 7px;
-        }
-
-        .error {
-            background: #FDECEC;
-            color: #9B2226;
-        }
-
-        .success {
-            background: #E8F5EC;
-            color: #106638;
-        }
-
-        .notice {
-            background: #E8F0FF;
-            color: #174A8B;
-            padding: 14px;
-            margin-bottom: 22px;
-            border-radius: 7px;
+            border-radius: 9px;
             font-size: 14px;
         }
 
-        @media (max-width: 600px) {
+        .alert ul {
+            padding-left: 22px;
+            margin: 8px 0 0;
+        }
+
+        .alert li {
+            margin-bottom: 4px;
+        }
+
+        .error {
+            color: #9B2226;
+            background: #FDECEC;
+            border: 1px solid #F5CACA;
+        }
+
+        .success {
+            color: #106638;
+            background: #E8F5EC;
+            border: 1px solid #CDE7D5;
+        }
+
+        @media (max-width: 700px) {
+
+            .hero {
+                padding: 42px 6%;
+            }
+
+            .hero h1 {
+                font-size: 27px;
+            }
+
+            .hero p {
+                font-size: 14px;
+            }
+
+            .container {
+                margin-top: 28px;
+            }
+
             .form-card {
-                padding: 20px;
+                padding: 23px;
             }
+
         }
 
-        .container {
-            max-width: 800px;
-            width: 92%;
-            margin: 40px auto;
-        }
+        @media (max-width: 480px) {
 
-        .heading {
-            margin-bottom: 25px;
-        }
+            .hero {
+                padding: 35px 5%;
+            }
 
-        .heading h1 {
-            color: var(--sc-blue);
-            font-size: 30px;
-        }
+            .hero h1 {
+                font-size: 24px;
+            }
 
-        .heading p {
-            color: var(--sc-muted);
-        }
+            .page-intro h2 {
+                font-size: 20px;
+            }
 
-        .form-card {
-            padding: 32px;
-            border: 1px solid var(--sc-border);
-        }
-
-        label {
-            color: var(--sc-text);
-        }
-
-        input[type="text"],
-        textarea,
-        select {
-            border: 1px solid var(--sc-border);
-            border-radius: 8px;
-        }
-
-        input[type="text"]:focus,
-        textarea:focus,
-        select:focus {
-            outline: 2px solid var(--sc-green);
-            border-color: var(--sc-green);
-        }
-
-        button {
-            background: var(--sc-green);
-            border-radius: 8px;
-            transition: background 0.2s ease;
-        }
-
-        button:hover {
-            background: var(--sc-green-dark);
-        }
-
-        .notice {
-            background: var(--sc-green-soft);
-            color: var(--sc-green-dark);
-            border: 1px solid var(--sc-border);
-        }
-
-        .alert {
-            border-radius: 9px;
-        }
-
-        @media (max-width: 600px) {
             .form-card {
-                padding: 20px;
+                padding: 18px;
             }
 
-            .heading h1 {
-                font-size: 25px;
+            .file-upload-area {
+                padding: 17px;
             }
+
         }
 
     </style>
@@ -637,17 +780,28 @@ $success = isset($_GET["success"]) && $_GET["success"] === "1";
 
 <?php include "includes/header.php"; ?>
 
+<section class="hero">
+
+    <h1>Upload Study Materials</h1>
+
+    <p>
+        Share your knowledge with the StudyCircle community.
+        Upload useful notes, lecture materials and academic resources
+        to help fellow students learn together.
+    </p>
+
+</section>
+
 <main class="container">
 
-    <div class="heading">
+    <div class="form-card">
 
-        <h1>Share Study Materials</h1>
+        <h2>Share Your Knowledge</h2>
 
         <p>
-            Help your fellow students by sharing useful academic resources.
+            Complete the form below to share your academic resources
+            with other students.
         </p>
-
-    </div>
 
     <?php if ($success): ?>
 
@@ -661,51 +815,85 @@ $success = isset($_GET["success"]) && $_GET["success"] === "1";
     <?php if (!empty($errors)): ?>
 
         <div class="alert error">
+
             <strong>Please correct the following:</strong>
+
             <ul>
                 <?php foreach ($errors as $error): ?>
-                    <li><?= htmlspecialchars($error) ?></li>
+                    <li>
+                        <?= htmlspecialchars($error, ENT_QUOTES, "UTF-8") ?>
+                    </li>
                 <?php endforeach; ?>
             </ul>
+
         </div>
-        
+
     <?php endif; ?>
 
     <div class="notice">
-        Your upload will not appear in the public materials list
-        until an administrator approves it. Upload PDF files only,
-        up to 10 MB.
+
+        <div class="notice-icon">ℹ</div>
+
+        <div>
+            <strong>Important upload information</strong>
+            Your upload will not appear in the public materials list
+            until an administrator approves it. Only PDF files are
+            accepted, with a maximum file size of 10 MB.
+        </div>
+
     </div>
 
-    <div class="form-card sc-card">
+    </div><br>
+
+    <div class="form-card">
+
+        <div class="form-card-header">
+
+            <h2>Material Details</h2>
+
+            <p>
+                Enter the information about the material you want to share.
+            </p>
+
+        </div>
 
         <form method="POST"
               action="upload_material.php"
               enctype="multipart/form-data">
 
-            <input type="hidden" name="csrf_token"
-                   value="<?= htmlspecialchars($_SESSION["upload_csrf"]) ?>">
+            <input
+                type="hidden"
+                name="csrf_token"
+                value="<?= htmlspecialchars($_SESSION["upload_csrf"], ENT_QUOTES, "UTF-8") ?>"
+            >
 
             <div class="form-group">
 
-                <label for="title">Material Title *</label>
+                <label for="title">
+                    Material Title <span class="required">*</span>
+                </label>
 
                 <input
                     type="text"
                     id="title"
                     name="title"
                     maxlength="200"
-                    value="<?= htmlspecialchars($title) ?>"
+                    value="<?= htmlspecialchars($title, ENT_QUOTES, "UTF-8") ?>"
                     placeholder="e.g. Introduction to Programming Notes"
                     required
                 >
 
-            </div>
+                <p class="hint">
+                    Give your material a clear and meaningful title.
+                </p>
 
+            </div>
 
             <div class="form-group">
 
-                <label for="subject_id">Subject *</label>
+                <label for="subject_id">
+                    Subject <span class="required">*</span>
+                </label>
 
                 <select id="subject_id" name="subject_id" required>
 
@@ -720,33 +908,46 @@ $success = isset($_GET["success"]) && $_GET["success"] === "1";
                                 <?= (string) $subjectId ===
                                     (string) $subject["subject_id"]
                                     ? "selected" : "" ?>
-                            >  
-                                <?= htmlspecialchars($subject["subject_name"]) ?>
+                            >
+                                <?= htmlspecialchars(
+                                    $subject["subject_name"],
+                                    ENT_QUOTES,
+                                    "UTF-8"
+                                ) ?>
                             </option>
 
                         <?php endwhile; ?>
 
                     <?php endif; ?>
 
-                    <option value="new"
-                        <?= $subjectId === "new" ? "selected" : "" ?>>
+                    <option
+                        value="new"
+                        <?= $subjectId === "new" ? "selected" : "" ?>
+                    >
                         + Add a new subject
                     </option>
 
                 </select>
 
-                <div id="new-subject-box"
-                    style="display: <?= $subjectId === "new" ? "block" : "none" ?>;
-                            margin-top: 12px;">
+                <div
+                    id="new-subject-box"
+                    style="display: <?= $subjectId === "new" ? "block" : "none" ?>;"
+                >
 
-                    <label for="new_subject_name">New Subject Name *</label>
+                    <label for="new_subject_name">
+                        New Subject Name <span class="required">*</span>
+                    </label>
 
                     <input
                         type="text"
                         id="new_subject_name"
                         name="new_subject_name"
                         maxlength="100"
-                        value="<?= htmlspecialchars($newSubjectName) ?>"
+                        value="<?= htmlspecialchars(
+                            $newSubjectName,
+                            ENT_QUOTES,
+                            "UTF-8"
+                        ) ?>"
                         placeholder="e.g. Object-Oriented Programming"
                     >
 
@@ -755,56 +956,64 @@ $success = isset($_GET["success"]) && $_GET["success"] === "1";
                     </p>
 
                 </div>
-                
+
             </div>
-
-            <script>
-            const subjectSelect = document.getElementById("subject_id");
-            const newSubjectBox = document.getElementById("new-subject-box");
-            const newSubjectInput = document.getElementById("new_subject_name");
-
-            function updateSubjectField() {
-                const addingNew = subjectSelect.value === "new";
-
-                newSubjectBox.style.display = addingNew ? "block" : "none";
-                newSubjectInput.required = addingNew;
-            }
-
-            subjectSelect.addEventListener("change", updateSubjectField);
-            updateSubjectField();
-            </script>
-
 
             <div class="form-group">
 
-                <label for="description">Description</label>
+                <label for="description">
+                    Description
+                </label>
 
                 <textarea
                     id="description"
                     name="description"
                     maxlength="5000"
-                    placeholder="Briefly describe the material..."
-                ><?= htmlspecialchars($description) ?></textarea>
+                    placeholder="Briefly describe the material and what students can learn from it..."
+                ><?= htmlspecialchars($description, ENT_QUOTES, "UTF-8") ?></textarea>
+
+                <p class="hint">
+                    Explain what the material contains. This helps other
+                    students understand its purpose.
+                </p>
 
             </div>
 
             <div class="form-group">
 
-                <label for="material_file">Choose PDF File *</label>
+                <label for="material_file">
+                    Upload PDF File <span class="required">*</span>
+                </label>
 
-                <input
-                    type="file"
-                    id="material_file"
-                    name="material_file"
-                    accept=".pdf,application/pdf"
-                    required
-                >
+                <div class="file-upload-area">
 
-                <p class="hint">PDF format only. Maximum file size: 10 MB.</p>
-                
+                    <span class="upload-icon">📄</span>
+
+                    <p>
+                        Choose the PDF document you want to share.
+                    </p>
+
+                    <input
+                        type="file"
+                        id="material_file"
+                        name="material_file"
+                        accept=".pdf,application/pdf"
+                        required
+                    >
+
+                    <div class="file-info" id="file-info"></div>
+
+                    <p class="hint">
+                        PDF format only. Maximum file size: 10 MB.
+                    </p>
+
+                </div>
+
             </div>
 
-            <button type="submit">Submit for Approval</button>
+            <button type="submit" class="submit-button">
+                Submit for Approval
+            </button>
 
         </form>
 
@@ -814,16 +1023,67 @@ $success = isset($_GET["success"]) && $_GET["success"] === "1";
 
 <?php include "includes/footer.php"; ?>
 
-<?php if (isset($_GET["success"]) && $_GET["success"] == "1"): ?>
+<script>
+
+    const subjectSelect = document.getElementById("subject_id");
+    const newSubjectBox = document.getElementById("new-subject-box");
+    const newSubjectInput = document.getElementById("new_subject_name");
+
+    function updateSubjectField() {
+
+        const addingNew = subjectSelect.value === "new";
+
+        newSubjectBox.style.display = addingNew ? "block" : "none";
+
+        newSubjectInput.required = addingNew;
+    }
+
+    subjectSelect.addEventListener("change", updateSubjectField);
+
+    updateSubjectField();
+
+</script>
 
 <script>
+
+    const materialFileInput = document.getElementById("material_file");
+    const fileInfo = document.getElementById("file-info");
+
+    materialFileInput.addEventListener("change", function () {
+
+        const file = this.files[0];
+
+        if (!file) {
+            fileInfo.style.display = "none";
+            fileInfo.textContent = "";
+            return;
+        }
+
+        const fileSize = (file.size / (1024 * 1024)).toFixed(2);
+
+        fileInfo.textContent =
+            "Selected file: " + file.name + " (" + fileSize + " MB)";
+
+        fileInfo.style.display = "block";
+
+    });
+
+</script>
+
+<?php if ($success): ?>
+
+<script>
+
     Swal.fire({
+
         icon: "success",
         title: "Upload Successful!",
         text: "Your study material has been uploaded successfully and is waiting for admin approval.",
         confirmButtonText: "OK",
         confirmButtonColor: "#16834A"
+
     });
+
 </script>
 
 <?php endif; ?>
@@ -831,13 +1091,20 @@ $success = isset($_GET["success"]) && $_GET["success"] === "1";
 <?php if (!empty($errors)): ?>
 
 <script>
+
     Swal.fire({
+
         icon: "error",
         title: "Oops!",
-        html: <?= json_encode(implode("<br>", $errors)) ?>,
+        html: <?= json_encode(
+            implode("<br>", $errors),
+            JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP
+        ) ?>,
         confirmButtonText: "Try Again",
         confirmButtonColor: "#174A8B"
+
     });
+
 </script>
 
 <?php endif; ?>
