@@ -179,6 +179,10 @@ $scLogoutLink = $scBase . 'logout.php';
 
 </header>
 
+<head>
+    <link rel="icon" type="image/png" href="assets/studycircle-icon.png">
+</head>
+
 <script>
 document.addEventListener("click", function(event) {
 
