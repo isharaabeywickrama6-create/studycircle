@@ -1515,7 +1515,7 @@ if (
                             value="<?= (int)$session["session_id"] ?>"
                         >
 
-                        <button type="submit" style="background: #C0392B;">
+                        <button type="submit">
                             Delete Session
                         </button>
                     </form>
