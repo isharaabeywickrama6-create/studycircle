@@ -934,6 +934,53 @@ if (
         text-transform:none;
     }
 
+    .session-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 14px;
+        flex-wrap: wrap;
+    }
+
+    .session-actions .button,
+    .session-actions button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0;
+        padding: 7px 12px;
+        border-radius: 7px;
+        font-size: 12px;
+        font-weight: 700;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .session-actions .button {
+        color: #174A8B;
+        background: #EEF4FC;
+        border: 1px solid #B8CCE8;
+    }
+
+    .session-actions .button:hover {
+        color: #174A8B;
+        background: #DCE9F8;
+        border-color: #8EADD6;
+    }
+
+    .session-actions button {
+        color: #A52820;
+        background: #FFF5F4;
+        border: 1px solid #E6B8B5;
+    }
+
+    .session-actions button:hover {
+        color: #A52820;
+        background: #FCE8E6;
+        border-color: #D98C86;
+    }
+
     </style>
 
 </head>
