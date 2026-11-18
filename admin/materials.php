@@ -8,6 +8,50 @@ if (empty($_SESSION["admin_materials_csrf"])) {
     $_SESSION["admin_materials_csrf"] = bin2hex(random_bytes(32));
 }
 
+function deleteUploadedMaterialFile($storedPath) {
+
+    if (empty($storedPath)) {
+        return true;
+    }
+
+    $projectRoot = realpath(__DIR__ . "/..");
+
+    if ($projectRoot === false) {
+        return false;
+    }
+
+    $storedPath = str_replace("\\", "/", trim($storedPath));
+
+    if (preg_match('/^(https?:)?\/\//i', $storedPath)) {
+        return false;
+    }
+
+    if (preg_match('/^(\/|[A-Za-z]:\/)/', $storedPath)) {
+        $filePath = realpath($storedPath);
+    } else {
+        $filePath = realpath(
+            $projectRoot . DIRECTORY_SEPARATOR . ltrim($storedPath, "/")
+        );
+    }
+
+    if ($filePath === false) {
+        return true;
+    }
+
+    $rootPrefix = rtrim($projectRoot, DIRECTORY_SEPARATOR)
+        . DIRECTORY_SEPARATOR;
+
+    if (strpos($filePath, $rootPrefix) !== 0) {
+        return false;
+    }
+
+    if (is_file($filePath)) {
+        return unlink($filePath);
+    }
+
+    return true;
+}
+
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     $token = $_POST["csrf_token"] ?? "";
@@ -20,48 +64,134 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     } else {
 
+        $action = $_POST["action"] ?? "update_status";
+
         $materialId = filter_input(
             INPUT_POST,
             "material_id",
             FILTER_VALIDATE_INT
         );
 
-        $newStatus = $_POST["status"] ?? "";
+        if ($action === "delete_material") {
 
-        if (
-            $materialId &&
-            in_array($newStatus, ["approved", "rejected"], true)
-        ) {
+            if ($materialId && $materialId > 0) {
 
-            $stmt = $conn->prepare(
-                "UPDATE materials
-                 SET status = ?
-                 WHERE material_id = ? AND status = 'pending'"
-            );
+                $selectStmt = $conn->prepare(
+                    "SELECT file_path
+                     FROM materials
+                     WHERE material_id = ?"
+                );
 
-            if ($stmt) {
+                if ($selectStmt) {
 
-                $stmt->bind_param("si", $newStatus, $materialId);
-                if ($stmt->execute()) {
+                    $selectStmt->bind_param("i", $materialId);
 
-                    if ($stmt->affected_rows > 0) {
-                        $message = "Material status updated successfully.";
+                    if ($selectStmt->execute()) {
+
+                        $selectStmt->bind_result($filePath);
+
+                        if ($selectStmt->fetch()) {
+
+                            $selectStmt->close();
+
+                            $deleteStmt = $conn->prepare(
+                                "DELETE FROM materials
+                                 WHERE material_id = ?"
+                            );
+
+                            if ($deleteStmt) {
+
+                                $deleteStmt->bind_param("i", $materialId);
+
+                                if ($deleteStmt->execute()) {
+
+                                    if ($deleteStmt->affected_rows > 0) {
+
+                                        $deleteStmt->close();
+
+                                        if (deleteUploadedMaterialFile($filePath)) {
+                                            $message = "Material deleted successfully.";
+                                        } else {
+                                            $message = "Material record deleted, but the uploaded file could not be removed.";
+                                        }
+
+                                    } else {
+                                        $message = "Material could not be found.";
+                                        $deleteStmt->close();
+                                    }
+
+                                } else {
+                                    $message = "Could not delete material. It may be connected to other database records.";
+                                    $deleteStmt->close();
+                                }
+
+                            } else {
+                                $message = "Could not prepare the delete request.";
+                            }
+
+                        } else {
+                            $message = "Material could not be found.";
+                            $selectStmt->close();
+                        }
+
                     } else {
-                        $message = "No pending material was updated.";
+                        $message = "Could not retrieve material details.";
+                        $selectStmt->close();
                     }
 
+                } else {
+                    $message = "Could not prepare the material search.";
+                }
+
             } else {
-                $message = "Could not update material status.";
+                $message = "Invalid material details.";
             }
 
-            $stmt->close();
+        }
+
+        elseif ($action === "update_status") {
+
+            $newStatus = $_POST["status"] ?? "";
+
+            if (
+                $materialId &&
+                in_array($newStatus, ["approved", "rejected"], true)
+            ) {
+
+                $stmt = $conn->prepare(
+                    "UPDATE materials
+                     SET status = ?
+                     WHERE material_id = ? AND status = 'pending'"
+                );
+
+                if ($stmt) {
+
+                    $stmt->bind_param("si", $newStatus, $materialId);
+
+                    if ($stmt->execute()) {
+
+                        if ($stmt->affected_rows > 0) {
+                            $message = "Material status updated successfully.";
+                        } else {
+                            $message = "No pending material was updated.";
+                        }
+
+                    } else {
+                        $message = "Could not update material status.";
+                    }
+
+                    $stmt->close();
+
+                } else {
+                    $message = "Could not prepare the update.";
+                }
 
             } else {
-                $message = "Could not prepare the update.";
+                $message = "Invalid material details.";
             }
 
         } else {
-            $message = "Invalid material details.";
+            $message = "Invalid action.";
         }
     }
 }
@@ -101,7 +231,9 @@ $countResult = $conn->query(
 );
 
 if ($countResult) {
+
     while ($count = $countResult->fetch_assoc()) {
+
         $status = $count["status"];
 
         if (isset($materialCounts[$status])) {
@@ -184,10 +316,13 @@ function e($value) {
             background: var(--sc-green-soft);
             color: var(--sc-green-dark);
             font-size: 13px;
+            padding: 17px 15px;
+            white-space: nowrap;
         }
 
         .materials-table td {
             font-size: 14px;
+            line-height: 1.6;
         }
 
         .materials-table tr:last-child td {
@@ -204,15 +339,6 @@ function e($value) {
 
         .materials-table tbody tr:hover {
             background: #EAF5EE;
-        }
-
-        .materials-table th {
-            padding: 17px 15px;
-            white-space: nowrap;
-        }
-
-        .materials-table td {
-            line-height: 1.6;
         }
 
         .material-description {
@@ -248,6 +374,7 @@ function e($value) {
 
         .action-buttons {
             display: flex;
+            align-items: center;
             gap: 8px;
             flex-wrap: wrap;
         }
@@ -271,12 +398,12 @@ function e($value) {
             transform: translateY(-2px);
         }
 
-        .approve-button:hover {
-            background: #106638;
-        }
-
         .approve-button {
             background: #16834A;
+        }
+
+        .approve-button:hover {
+            background: #106638;
         }
 
         .reject-button {
@@ -285,6 +412,19 @@ function e($value) {
 
         .reject-button:hover {
             background: #922B21;
+        }
+
+        .delete-button {
+            background: rgba(192, 57, 43, 0.10);
+            color: #B42318 !important;
+            border: 1px solid rgba(192, 57, 43, 0.30) !important;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        .delete-button:hover {
+            background: rgba(192, 57, 43, 0.18);
+            border-color: rgba(192, 57, 43, 0.50) !important;
         }
 
         .no-action {
@@ -366,7 +506,7 @@ function e($value) {
 </head>
 
 <body>
-    
+
 <?php include "../includes/header.php"; ?>
 
 <div class="admin-container">
@@ -378,88 +518,137 @@ function e($value) {
 
     <div class="material-summary">
 
-    <div class="summary-card pending">
-        <h3>Pending Materials</h3>
-        <p><?= $materialCounts["pending"] ?></p>
+        <div class="summary-card pending">
+            <h3>Pending Materials</h3>
+            <p><?= $materialCounts["pending"] ?></p>
+        </div>
+
+        <div class="summary-card approved">
+            <h3>Approved Materials</h3>
+            <p><?= $materialCounts["approved"] ?></p>
+        </div>
+
+        <div class="summary-card rejected">
+            <h3>Rejected Materials</h3>
+            <p><?= $materialCounts["rejected"] ?></p>
+        </div>
+
     </div>
-    <div class="summary-card approved">
-        <h3>Approved Materials</h3>
-        <p><?= $materialCounts["approved"] ?></p>
-    </div>
-    <div class="summary-card rejected">
-        <h3>Rejected Materials</h3>
-        <p><?= $materialCounts["rejected"] ?></p>
-    </div>
 
-</div>
+    <?php if ($message !== ""): ?>
+        <div class="admin-notice">
+            <?= e($message) ?>
+        </div>
+    <?php endif; ?>
 
-<?php if ($message !== ""): ?>
-    <div class="admin-notice"><?= e($message) ?></div>
-<?php endif; ?>
+    <div class="materials-table-wrapper">
 
-<div class="materials-table-wrapper">
+        <table class="materials-table">
 
-    <table class="materials-table">
-
-        <thead>
-
-            <tr>
-                <th>ID</th>
-                <th>Title and Description</th>
-                <th>Uploaded By</th>
-                <th>Subject</th>
-                <th>Date</th>
-                <th>Status</th>
-                <th>Action</th>
-            </tr>
-
-        </thead>
-
-        <tbody>
-
-        <?php if ($result->num_rows > 0): ?>
-
-            <?php while ($material = $result->fetch_assoc()): ?>
-
+            <thead>
                 <tr>
-                    <td>
-                        <?= e($material["material_id"]) ?>
-                    </td>
+                    <th>ID</th>
+                    <th>Title and Description</th>
+                    <th>Uploaded By</th>
+                    <th>Subject</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
 
-                    <td>
-                        <strong><?= e($material["title"]) ?></strong>
-                        <p class="material-description">
-                            <?= e($material["description"]) ?>
-                        </p>
-                    </td>
+            <tbody>
 
-                    <td>
-                        <?= e($material["uploader"] ?? "Unknown") ?>
-                    </td>
+            <?php if ($result->num_rows > 0): ?>
 
-                    <td>
-                        <?= e($material["subject_name"] ?? "Not assigned") ?>
-                    </td>
+                <?php while ($material = $result->fetch_assoc()): ?>
 
-                    <td>
-                        <?= !empty($material["created_at"])
-                            ? e(date("d M Y", strtotime($material["created_at"])))
-                            : "—" ?>
-                    </td>
+                    <tr>
 
-                    <td>
-                        <span class="status-badge status-<?= e($material["status"]) ?>">
-                            <?= e($material["status"]) ?>
-                        </span>
-                    </td>
+                        <td>
+                            <?= e($material["material_id"]) ?>
+                        </td>
 
-                    <td>
-                        <?php if ($material["status"] === "pending"): ?>
+                        <td>
+                            <strong><?= e($material["title"]) ?></strong>
+
+                            <p class="material-description">
+                                <?= e($material["description"]) ?>
+                            </p>
+                        </td>
+
+                        <td>
+                            <?= e($material["uploader"] ?? "Unknown") ?>
+                        </td>
+
+                        <td>
+                            <?= e($material["subject_name"] ?? "Not assigned") ?>
+                        </td>
+
+                        <td>
+                            <?= !empty($material["created_at"])
+                                ? e(date("d M Y", strtotime($material["created_at"])))
+                                : "—" ?>
+                        </td>
+
+                        <td>
+                            <span class="status-badge status-<?= e($material["status"]) ?>">
+                                <?= e($material["status"]) ?>
+                            </span>
+                        </td>
+
+                        <td>
 
                             <div class="action-buttons">
 
+                                <?php if ($material["status"] === "pending"): ?>
+
+                                    <form method="POST"
+                                        onsubmit="return confirm('Approve this material?');">
+
+                                        <input type="hidden" name="csrf_token"
+                                            value="<?= e($_SESSION["admin_materials_csrf"]) ?>">
+
+                                        <input type="hidden" name="material_id"
+                                            value="<?= e($material["material_id"]) ?>">
+
+                                        <input type="hidden" name="status"
+                                            value="approved">
+
+                                        <input type="hidden" name="action"
+                                            value="update_status">
+
+                                        <button class="approve-button" type="submit">
+                                            Approve
+                                        </button>
+
+                                    </form>
+
+                                    <form method="POST"
+                                        onsubmit="return confirm('Reject this material?');">
+
+                                        <input type="hidden" name="csrf_token"
+                                            value="<?= e($_SESSION["admin_materials_csrf"]) ?>">
+
+                                        <input type="hidden" name="material_id"
+                                            value="<?= e($material["material_id"]) ?>">
+
+                                        <input type="hidden" name="status"
+                                            value="rejected">
+
+                                        <input type="hidden" name="action"
+                                            value="update_status">
+
+                                        <button class="reject-button" type="submit">
+                                            Reject
+                                        </button>
+
+                                    </form>
+
+                                <?php endif; ?>
+
                                 <form method="POST"
-                                    onsubmit="return confirm('Approve this material?');">
+                                    onsubmit="return confirm('Are you sure you want to permanently delete this material? This action cannot be undone.');">
 
                                     <input type="hidden" name="csrf_token"
                                         value="<?= e($_SESSION["admin_materials_csrf"]) ?>">
@@ -467,60 +656,38 @@ function e($value) {
                                     <input type="hidden" name="material_id"
                                         value="<?= e($material["material_id"]) ?>">
 
-                                    <input type="hidden" name="status" value="approved">
+                                    <input type="hidden" name="action"
+                                        value="delete_material">
 
-                                    <button class="approve-button" type="submit">
-                                        Approve
-                                    </button>
-
-                                </form>
-
-                                <form method="POST"
-                                    onsubmit="return confirm('Reject this material?');">
-
-                                    <input type="hidden" name="csrf_token"
-                                        value="<?= e($_SESSION["admin_materials_csrf"]) ?>">
-
-                                    <input type="hidden" name="material_id"
-                                        value="<?= e($material["material_id"]) ?>">
-
-                                    <input type="hidden" name="status" value="rejected">
-
-                                    <button class="reject-button" type="submit">
-                                        Reject
+                                    <button class="delete-button" type="submit">
+                                        Delete
                                     </button>
 
                                 </form>
 
                             </div>
 
-                        <?php else: ?>
+                        </td>
 
-                            <span class="no-action">No action needed</span>
+                    </tr>
 
-                        <?php endif; ?>
+                <?php endwhile; ?>
 
+            <?php else: ?>
+
+                <tr>
+                    <td colspan="7" class="empty-row">
+                        No study materials have been submitted yet.
                     </td>
-
                 </tr>
 
-            <?php endwhile; ?>
+            <?php endif; ?>
 
-        <?php else: ?>
+            </tbody>
 
-            <tr>
-                <td colspan="7" class="empty-row">
-                    No study materials have been submitted yet.
-                </td>
-            </tr>
+        </table>
 
-        <?php endif; ?>
-        
-        </tbody>
-
-    </table>
-    
-</div>
+    </div>
 
 </div>
 
