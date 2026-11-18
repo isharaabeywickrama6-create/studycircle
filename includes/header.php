@@ -29,6 +29,8 @@ $scLogoutLink = $scBase . 'logout.php';
 
 <header class="sc-site-header">
 
+    <link rel="icon" type="image/png" href="assets/studycircle-icon.png">
+
     <a class="sc-brand" href="<?= htmlspecialchars($scHomeLink, ENT_QUOTES, 'UTF-8') ?>">
         <img src="<?= $scBase ?>assets/studycircle-icon.png"
              alt="StudyCircle Logo"
@@ -178,10 +180,6 @@ $scLogoutLink = $scBase . 'logout.php';
 </div>
 
 </header>
-
-<head>
-    <link rel="icon" type="image/png" href="assets/studycircle-icon.png">
-</head>
 
 <script>
 document.addEventListener("click", function(event) {
