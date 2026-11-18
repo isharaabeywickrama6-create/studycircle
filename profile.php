@@ -28,6 +28,12 @@ if (!is_dir($uploadDir)) {
 $stmt = $conn->prepare(
     "SELECT name, email, profile_image FROM users WHERE user_id = ?"
 );
+
+if (!$stmt) {
+    error_log("Profile SQL error: " . $conn->error);
+    exit("Unable to load your profile. Please contact the administrator.");
+}
+
 $stmt->bind_param("i", $userId);
 $stmt->execute();
 
