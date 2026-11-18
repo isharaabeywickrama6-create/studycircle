@@ -847,32 +847,14 @@ function e($value): string
             }
         }
 
-        .sc-forum-label {
+        .sc-forum-label h3{
             display: inline-block;
-            margin-bottom: 12px;
-            padding: 11px 18px;
-            color: #106638;
-            background: #f1f5f2;
-            border: 1px solid #DCE5DF;
-            border-radius: 30px;
-            font-size: 14px;
+            margin-bottom: 0;
+            margin-bottom: 0;
+            padding: 3px 12px;
+            color: #174A8B;
+            font-size: 22px;
             font-weight: 700;
-            letter-spacing: 1.4px;
-            text-transform:none;
-        }
-
-        .sc-forum-label1 {
-            display: inline-block;
-            margin-bottom: 12px;
-            padding: 11px 18px;
-            color: #263445;
-            background: #eceeef;
-            border: 1px solid #bfd7f7;
-            border-radius: 30px;
-            font-size: 18px;
-            font-weight: 700;
-            letter-spacing: 1.4px;
-            text-transform:none;
         }
 
         .reply-delete-button {
@@ -1001,7 +983,7 @@ function e($value): string
 
         <?php if ($isStudent): ?>
 
-            <span class="sc-forum-label">Start a Discussion</span>
+            <span class="sc-forum-label"><h3>Start a Discussion</h3></span>
 
             <form method="POST" action="forum.php">
 
@@ -1062,7 +1044,7 @@ function e($value): string
 
     <section class="panel sc-card">
 
-        <span class="sc-forum-label">Recent Discussions</span>
+        <span class="sc-forum-label"><h3>Recent Discussions</h3></span>
 
         <?php if (!$discussions): ?>
 

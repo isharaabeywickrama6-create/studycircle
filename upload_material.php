@@ -461,10 +461,51 @@ $success = isset($_GET["success"]) && $_GET["success"] === "1";
             text-justify: center;
         }
 
-        .container {
+        .form-card1 {
             max-width: 1200px;
             width: 92%;
             margin: 38px auto 55px;
+            padding: 28px;
+            margin-bottom: 1px;
+
+            background: #FFFFFF;
+            border: 1px solid #DCE5DF;
+            border-radius: 16px;
+
+            box-shadow: 0 5px 18px rgba(38,52,69,0.055);
+        }
+
+        .form-card1 h2 {
+            margin-top: 0;
+            margin-bottom: 12px;
+
+            color: #106638;
+            font-size: 22px;
+            font-weight: 800;
+        }
+
+        .form-card2 {
+            max-width: 1200px;
+            width: 92%;
+            margin: 38px auto 55px;
+            padding: 28px;
+            margin-bottom: 26px;
+            margin-top: 10px;
+
+            background: #FFFFFF;
+            border: 1px solid #DCE5DF;
+            border-radius: 16px;
+
+            box-shadow: 0 5px 18px rgba(38,52,69,0.055);
+        }
+
+        .form-card2 h2 {
+            margin-top: 0;
+            margin-bottom: 12px;
+
+            color: #106638;
+            font-size: 22px;
+            font-weight: 800;
         }
 
         .page-intro h2 {
@@ -525,7 +566,7 @@ $success = isset($_GET["success"]) && $_GET["success"] === "1";
 
         .form-card-header h2 {
             margin: 0 0 5px;
-            color: #263445;
+            color: #106638;
             font-size: 21px;
         }
 
@@ -798,7 +839,7 @@ $success = isset($_GET["success"]) && $_GET["success"] === "1";
 
 <main class="container">
 
-    <div class="form-card">
+    <div class="form-card1">
 
         <h2>Share Your Knowledge</h2>
 
@@ -849,7 +890,7 @@ $success = isset($_GET["success"]) && $_GET["success"] === "1";
 
     </div><br>
 
-    <div class="form-card">
+    <div class="form-card2">
 
         <div class="form-card-header">
 

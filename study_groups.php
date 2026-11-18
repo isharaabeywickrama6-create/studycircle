@@ -807,7 +807,7 @@ if (
     h3 {
         margin-top: 0;
         margin-bottom: 12px;
-        color: #106638;
+        color: #174A8B;
         font-size: 22px;
         font-weight: 600;
     }
@@ -819,6 +819,26 @@ if (
         margin-bottom: 22px; 
         box-shadow: 0 3px 12px #0000000A; 
         font-weight: 500;
+    }
+
+    .panel {
+        padding: 28px;
+        margin-bottom: 26px;
+
+        background: #FFFFFF;
+        border: 1px solid #DCE5DF;
+        border-radius: 16px;
+
+        box-shadow: 0 5px 18px rgba(38,52,69,0.055);
+    }
+
+    .panel h2 {
+        margin-top: 0;
+        margin-bottom: 12px;
+
+        color: #106638;
+        font-size: 22px;
+        font-weight: 800;
     }
 
     label { 
@@ -909,29 +929,9 @@ if (
 
     .sc-studygroups-label {
         display: inline-block;
-        margin-bottom: 12px;
-        padding: 6px 12px;
-        color: #106638;
-        background: #f1f5f2;
-        border: 1px solid #DCE5DF;
-        border-radius: 30px;
-        font-size: 14px;
-        font-weight: 700;
-        letter-spacing: 1.4px;
-        text-transform:none;
-    }
-    .sc-studygroups-label1 {
-        display: inline-block;
-        margin-bottom: 12px;
-        padding: 6px 12px;
-        color: #263445;
-        background: #f1f5f2;
-        border: 1px solid #DCE5DF;
-        border-radius: 30px;
-        font-size: 18px;
-        font-weight: 700;
-        letter-spacing: 1.4px;
-        text-transform:none;
+        padding: 6px;
+        color: #174A8B;
+        font-weight: 600;
     }
 
     .session-actions {
@@ -1130,7 +1130,7 @@ if (
 
     <section class="panel sc-card">
 
-        <h3>Study Groups</h3>
+        <h2>Study Groups</h2>
 
         <p>Create a group for your subject or join a group created by another student.</p>
 
@@ -1144,7 +1144,7 @@ if (
 
         <?php if ($isStudent): ?>
 
-        <span class="sc-studygroups-label">Create a Study Group</span>
+        <span class="sc-studygroups-label"><h3>Create a Study Group</h3></span>
 
         <form method="POST" action="study_groups.php">
 
@@ -1188,7 +1188,7 @@ if (
 
         <hr style="margin: 30px 0;">
 
-        <span class="sc-studygroups-label">Request a New Subject</span>
+        <span class="sc-studygroups-label"><h3>Request a New Subject</h3></span>
 
         <p>
             Can't find your subject in the dropdown?
@@ -1240,7 +1240,7 @@ if (
 
     <section class="panel sc-card">
 
-        <h3>Available Study Groups</h3>
+        <h2>Available Study Groups</h2>
 
         <?php if (!$groups): ?>
 
@@ -1409,7 +1409,7 @@ if (
 
         <section class="panel sc-card">
 
-        <h3>My Study Sessions</h3>
+        <h2>My Study Sessions</h2>
 
         <p>Study sessions created in groups you have joined.</p>
 
