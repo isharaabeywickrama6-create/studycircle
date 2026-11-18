@@ -16,6 +16,9 @@ function e($value) {
 $isStudent = isset($_SESSION["user_id"])
     && ($_SESSION["role"] ?? "") === "student";
 
+$isAdmin = isset($_SESSION["user_id"])
+    && ($_SESSION["role"] ?? "") === "admin";
+
 $userId = $isStudent ? (int)$_SESSION["user_id"] : 0;
 
 if (empty($_SESSION["materials_csrf"])) {
@@ -32,7 +35,7 @@ unset(
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
-    if (!$isStudent) {
+    if (!$isStudent && !$isAdmin) {
         header("Location: login.php");
         exit;
     }
@@ -98,7 +101,86 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $_SESSION["materials_message"] = "This material is not available.";
                 $_SESSION["materials_message_type"] = "error";
 
+            } elseif ($action === "delete_comment") {
+
+                $commentIdInput = $_POST["comment_id"] ?? "";
+
+                $commentId = is_string($commentIdInput)
+                    ? filter_var($commentIdInput, FILTER_VALIDATE_INT)
+                    : false;
+
+                if ($commentId === false || $commentId < 1) {
+
+                    $_SESSION["materials_message"] = "Invalid comment.";
+                    $_SESSION["materials_message_type"] = "error";
+
+                } else {
+
+                    if ($isAdmin) {
+
+                        $stmt = $conn->prepare(
+                            "DELETE FROM resource_comments
+                             WHERE comment_id = ? AND material_id = ?"
+                        );
+
+                        if ($stmt) {
+                            $stmt->bind_param("ii", $commentId, $materialId);
+
+                        }
+
+                    } else {
+
+                        $stmt = $conn->prepare(
+                            "DELETE FROM resource_comments
+                             WHERE comment_id = ?
+                             AND material_id = ?
+                             AND user_id = ?"
+                        );
+
+                        if ($stmt) {
+                            $stmt->bind_param("iii", $commentId, $materialId, $userId);
+                        }
+                    }
+
+                    if (!$stmt) {
+
+                        error_log("Comment deletion preparation failed: " . $conn->error);
+
+                        $_SESSION["materials_message"] = "Could not process comment deletion.";
+                        $_SESSION["materials_message_type"] = "error";
+
+                    } else {
+
+                        if ($stmt->execute()) {
+
+                            if ($stmt->affected_rows > 0) {
+                                $_SESSION["materials_message"] = "Comment deleted successfully!";
+                                $_SESSION["materials_message_type"] = "success";
+
+                            } else {
+                                $_SESSION["materials_message"] = "You cannot delete this comment, or it no longer exists.";
+                                $_SESSION["materials_message_type"] = "error";
+                            }
+
+                        } else {
+
+                            error_log("Comment deletion failed: " . $stmt->error);
+
+                            $_SESSION["materials_message"] = "Could not delete the comment.";
+                            $_SESSION["materials_message_type"] = "error";
+                        }
+
+                        $stmt->close();
+                    }
+                }
+
             } elseif ($action === "rate") {
+
+                    if (!$isStudent) {
+                        $_SESSION["materials_message"] = "Only students can submit ratings.";
+                        $_SESSION["materials_message_type"] = "error";
+
+                    } else {
 
                 $ratingInput = $_POST["rating"] ?? "";
 
@@ -150,54 +232,62 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         $_SESSION["materials_message_type"] = "error";
                     }
                 }
+            }
 
             } elseif ($action === "comment") {
 
-                $commentInput = $_POST["comment"] ?? "";
-
-                $comment = is_string($commentInput)
-                    ? trim($commentInput)
-                    : "";
-
-                if ($comment === "" || mb_strlen($comment) > 2000) {
-                    $_SESSION["materials_message"] = "Enter a comment of up to 2000 characters.";
+                if (!$isStudent) {
+                    $_SESSION["materials_message"] = "Only students can post comments.";
                     $_SESSION["materials_message_type"] = "error";
 
                 } else {
 
-                    $stmt = $conn->prepare(
-                        "INSERT INTO resource_comments
-                         (material_id, user_id, comment)
-                         VALUES (?, ?, ?)"
-                    );
+                    $commentInput = $_POST["comment"] ?? "";
 
-                    if ($stmt) {
-                        $stmt->bind_param(
-                            "iis",
-                            $materialId,
-                            $userId,
-                            $comment
-                        );
+                    $comment = is_string($commentInput)
+                        ? trim($commentInput)
+                        : "";
 
-                        if ($stmt->execute()) {
-                            $_SESSION["materials_message"] = "Your comment has been added!";
-                            $_SESSION["materials_message_type"] = "success";
-
-                        } else {
-
-                            error_log("Comment insertion failed: " . $stmt->error);
-
-                            $_SESSION["materials_message"] = "Could not add your comment.";
-                            $_SESSION["materials_message_type"] = "error";
-                        }
-
-                        $stmt->close();
+                    if ($comment === "" || mb_strlen($comment) > 2000) {
+                        $_SESSION["materials_message"] = "Enter a comment of up to 2000 characters.";
+                        $_SESSION["materials_message_type"] = "error";
 
                     } else {
-                        error_log("Comment preparation failed: " . $conn->error);
 
-                        $_SESSION["materials_message"] = "Could not process your comment.";
-                        $_SESSION["materials_message_type"] = "error";
+                        $stmt = $conn->prepare(
+                            "INSERT INTO resource_comments
+                             (material_id, user_id, comment)
+                             VALUES (?, ?, ?)"
+                        );
+
+                        if ($stmt) {
+                            $stmt->bind_param(
+                                "iis",
+                                $materialId,
+                                $userId,
+                                $comment
+                            );
+
+                            if ($stmt->execute()) {
+                                $_SESSION["materials_message"] = "Your comment has been added!";
+                                $_SESSION["materials_message_type"] = "success";
+
+                            } else {
+
+                                error_log("Comment insertion failed: " . $stmt->error);
+
+                                $_SESSION["materials_message"] = "Could not add your comment.";
+                                $_SESSION["materials_message_type"] = "error";
+                            }
+
+                            $stmt->close();
+
+                        } else {
+                            error_log("Comment preparation failed: " . $conn->error);
+
+                            $_SESSION["materials_message"] = "Could not process your comment.";
+                            $_SESSION["materials_message_type"] = "error";
+                        }
                     }
                 }
 
@@ -311,7 +401,7 @@ if (!$result) {
         background:
             radial-gradient(circle at 12% 15%, rgba(255,255,255,0.13), transparent 28%),
             radial-gradient(circle at 88% 85%, rgba(255,255,255,0.12), transparent 28%),
-            linear-gradient(125deg, #105A35, #16834A 55%, #21965B);
+            linear-gradient(120deg, #106638, #16834A);
 
         box-shadow: 0 10px 25px rgba(16,102,56,0.12);
     }
@@ -360,7 +450,7 @@ if (!$result) {
         text-transform: uppercase;
     }
 
-    .hero h2 {
+    .hero h1 {
         width: 100%;
         max-width: 800px;
 
@@ -368,7 +458,6 @@ if (!$result) {
 
         color: #FFFFFF;
 
-        font-size: clamp(27px, 3.5vw, 36px);
         font-weight: 600;
         line-height: 1.3;
         letter-spacing: -0.5px;
@@ -922,7 +1011,7 @@ if (!$result) {
             padding: 38px 20px;
         }
 
-        .hero h2 {
+        .hero h1 {
             font-size: 30px;
         }
 
@@ -951,7 +1040,7 @@ if (!$result) {
             padding: 35px 18px;
         }
 
-        .hero h2 {
+        .hero h1 {
             font-size: 27px;
         }
 
@@ -1018,7 +1107,7 @@ if (!$result) {
 
 <section class="hero">
 
-    <h2>Study Materials</h2>
+    <h1>Study Materials</h1>
 
     <p>
         Explore academic notes, lecture materials and other learning
@@ -1126,7 +1215,12 @@ if (!$result) {
 
                     <?php
                     $commentsStmt = $conn->prepare(
-                        "SELECT rc.comment, rc.created_at, u.name AS commenter_name
+                        "SELECT
+                            rc.comment_id,
+                            rc.user_id,
+                            rc.comment,
+                            rc.created_at,
+                            u.name AS commenter_name
                          FROM resource_comments rc
                          LEFT JOIN users u ON u.user_id = rc.user_id
                          WHERE rc.material_id = ?
@@ -1325,6 +1419,50 @@ if (!$result) {
                                                     strtotime($commentRow["created_at"])
                                                 )) ?>
                                             </small>
+
+                                            <?php if (
+                                                $isAdmin ||
+                                                ($isStudent && (int)$commentRow["user_id"] === $userId)
+                                            ): ?>
+
+                                                <form
+                                                    method="POST"
+                                                    action="materials.php"
+                                                    class="comment-delete-form"
+                                                    onsubmit="return confirm('Are you sure you want to delete this comment?');"
+                                                >
+
+                                                    <input
+                                                        type="hidden"
+                                                        name="csrf_token"
+                                                        value="<?= e($_SESSION["materials_csrf"]) ?>"
+                                                    >
+
+                                                    <input
+                                                        type="hidden"
+                                                        name="action"
+                                                        value="delete_comment"
+                                                    >
+
+                                                    <input
+                                                        type="hidden"
+                                                        name="material_id"
+                                                        value="<?= (int)$material["material_id"] ?>"
+                                                    >
+
+                                                    <input
+                                                        type="hidden"
+                                                        name="comment_id"
+                                                        value="<?= (int)$commentRow["comment_id"] ?>"
+                                                    >
+
+                                                    <button type="submit" class="comment-delete-button">
+                                                        Delete Comment
+                                                    </button>
+
+                                                </form>
+
+                                            <?php endif; ?>
 
                                         </div>
 

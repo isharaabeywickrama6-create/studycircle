@@ -745,7 +745,7 @@ if (
         background:
             radial-gradient(circle at 12% 15%, rgba(255,255,255,0.13), transparent 28%),
             radial-gradient(circle at 88% 85%, rgba(255,255,255,0.12), transparent 28%),
-            linear-gradient(125deg, #105A35, #16834A 55%, #21965B);
+            linear-gradient(120deg, #106638, #16834A);
 
         box-shadow: 0 10px 25px rgba(16,102,56,0.12);
     }
@@ -774,13 +774,12 @@ if (
         left: -55px;
     }
     
-    .hero h2 {
+    .hero h1 {
         width: 100%;
         max-width: 800px;
         margin: 0 auto 12px;
 
         color: #FFFFFF;
-        font-size: clamp(27px, 3.5vw, 36px);
         font-weight: 600;
         line-height: 1.3;
         letter-spacing: -0.5px;
@@ -945,7 +944,7 @@ if (
 
 <section class="hero">
 
-    <h2>Study Groups</h2>
+    <h1>Study Groups</h1>
 
     <p>
         Welcome to the NSBM StudyCircle Study Groups! This is a place where 

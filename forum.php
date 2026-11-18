@@ -7,6 +7,10 @@ $isStudent = isset($_SESSION["user_id"])
     && isset($_SESSION["role"])
     && $_SESSION["role"] === "student";
 
+$isAdmin = isset($_SESSION["user_id"])
+    && isset($_SESSION["role"])
+    && $_SESSION["role"] === "admin";
+
 if (
     !isset($_SESSION["forum_csrf"]) ||
     !is_string($_SESSION["forum_csrf"])
@@ -23,6 +27,165 @@ function validForumToken(): bool
 
     return is_string($token)
         && hash_equals($_SESSION["forum_csrf"], $token);
+}
+
+if (
+    $_SERVER["REQUEST_METHOD"] === "POST" &&
+    isset($_POST["edit_discussion"])
+) {
+    if (!$isStudent && !$isAdmin) {
+        header("Location: login.php");
+        exit;
+    }
+
+    if (!validForumToken()) {
+        $message = "Invalid request. Please refresh the page and try again.";
+        $messageType = "error";
+    } else {
+        $discussionInput = $_POST["discussion_id"] ?? "";
+        $titleInput = $_POST["edit_title"] ?? "";
+        $bodyInput = $_POST["edit_body"] ?? "";
+
+        $discussionId = is_string($discussionInput)
+            ? filter_var($discussionInput, FILTER_VALIDATE_INT)
+            : false;
+
+        $title = is_string($titleInput) ? trim($titleInput) : "";
+        $body = is_string($bodyInput) ? trim($bodyInput) : "";
+
+        if ($discussionId === false || $discussionId < 1) {
+            $message = "Invalid discussion.";
+            $messageType = "error";
+        } elseif ($title === "" || $body === "") {
+            $message = "Please enter both a title and message.";
+            $messageType = "error";
+        } elseif (mb_strlen($title) > 200) {
+            $message = "The title cannot exceed 200 characters.";
+            $messageType = "error";
+        } elseif (mb_strlen($body) > 10000) {
+            $message = "Your discussion message cannot exceed 10000 characters.";
+            $messageType = "error";
+        } else {
+            if ($isAdmin) {
+                $stmt = $conn->prepare(
+                    "UPDATE discussions
+                     SET title = ?, body = ?
+                     WHERE discussion_id = ?"
+                );
+
+                if ($stmt) {
+                    $stmt->bind_param("ssi", $title, $body, $discussionId);
+                }
+            } else {
+                $userId = (int) $_SESSION["user_id"];
+
+                $stmt = $conn->prepare(
+                    "UPDATE discussions
+                     SET title = ?, body = ?
+                     WHERE discussion_id = ? AND user_id = ?"
+                );
+
+                if ($stmt) {
+                    $stmt->bind_param(
+                        "ssii",
+                        $title,
+                        $body,
+                        $discussionId,
+                        $userId
+                    );
+                }
+            }
+
+            if (!$stmt) {
+                error_log("Discussion update preparation failed: " . $conn->error);
+                $message = "Could not process discussion editing.";
+                $messageType = "error";
+            } else {
+                if ($stmt->execute()) {
+                    if ($stmt->affected_rows > 0) {
+                        $message = "Discussion updated successfully!";
+                        $messageType = "success";
+                    } else {
+                        $message = "No changes were made, or you cannot edit this discussion.";
+                        $messageType = "error";
+                    }
+                } else {
+                    error_log("Discussion update failed: " . $stmt->error);
+                    $message = "Could not update the discussion.";
+                    $messageType = "error";
+                }
+
+                $stmt->close();
+            }
+        }
+    }
+}
+
+if (
+    $_SERVER["REQUEST_METHOD"] === "POST" &&
+    isset($_POST["delete_discussion"])
+) {
+    if (!$isStudent && !$isAdmin) {
+        header("Location: login.php");
+        exit;
+    }
+
+    if (!validForumToken()) {
+        $message = "Invalid request. Please refresh the page and try again.";
+        $messageType = "error";
+    } else {
+        $discussionInput = $_POST["discussion_id"] ?? "";
+
+        $discussionId = is_string($discussionInput)
+            ? filter_var($discussionInput, FILTER_VALIDATE_INT)
+            : false;
+
+        if ($discussionId === false || $discussionId < 1) {
+            $message = "Invalid discussion.";
+            $messageType = "error";
+        } else {
+            if ($isAdmin) {
+                $stmt = $conn->prepare(
+                    "DELETE FROM discussions WHERE discussion_id = ?"
+                );
+                if ($stmt) {
+                    $stmt->bind_param("i", $discussionId);
+                }
+            } else {
+                $userId = (int) $_SESSION["user_id"];
+
+                $stmt = $conn->prepare(
+                    "DELETE FROM discussions
+                     WHERE discussion_id = ? AND user_id = ?"
+                );
+                if ($stmt) {
+                    $stmt->bind_param("ii", $discussionId, $userId);
+                }
+            }
+
+            if (!$stmt) {
+                error_log("Discussion deletion preparation failed: " . $conn->error);
+                $message = "Could not process discussion deletion.";
+                $messageType = "error";
+            } else {
+                if ($stmt->execute()) {
+                    if ($stmt->affected_rows > 0) {
+                        $message = "Discussion deleted successfully!";
+                        $messageType = "success";
+                    } else {
+                        $message = "You cannot delete this discussion, or it no longer exists.";
+                        $messageType = "error";
+                    }
+                } else {
+                    error_log("Discussion deletion failed: " . $stmt->error);
+                    $message = "Could not delete the discussion.";
+                    $messageType = "error";
+                }
+
+                $stmt->close();
+            }
+        }
+    }
 }
 
 if (
@@ -137,7 +300,10 @@ if (
 
 if (
     $_SERVER["REQUEST_METHOD"] === "POST" &&
-    !isset($_POST["reply_submit"])
+    !isset($_POST["reply_submit"]) &&
+    !isset($_POST["delete_reply"]) &&
+    !isset($_POST["delete_discussion"]) &&
+    !isset($_POST["edit_discussion"])
 ) {
     if (!$isStudent) {
         header("Location: login.php");
@@ -271,7 +437,7 @@ if (!$subjects) {
 }
 
 $discussions = $conn->query(
-    "SELECT d.discussion_id, d.title, d.body, d.created_at,
+    "SELECT d.discussion_id, d.user_id, d.title, d.body, d.created_at,
             u.name AS author_name,
             s.subject_name,
             (SELECT COUNT(*)
@@ -306,410 +472,500 @@ function e($value): string
     <title>Academic Forum | NSBM StudyCircle</title>
     <link rel="stylesheet" href="assets/css/studycircle.css">
 
-<style>
-
-* {
-    box-sizing: border-box;
-}
-
-body {
-    background-color: #F3F6F5;
-    background-image:
-        linear-gradient(rgba(243, 246, 245, 0.5), rgba(243, 246, 245, 0.5)),
-        url("assets/studycircle3.jpg");
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-}
-
-.hero {
-    position: relative;
-    isolation: isolate;
-    overflow: hidden;
-
-    min-height: 260px;
-    padding: 42px 24px;
-
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-
-    text-align: center;
-
-    background:
-        radial-gradient(circle at 12% 15%, rgba(255,255,255,0.13), transparent 28%),
-        radial-gradient(circle at 88% 85%, rgba(255,255,255,0.12), transparent 28%),
-        linear-gradient(125deg, #105A35, #16834A 55%, #21965B);
-
-    box-shadow: 0 10px 25px rgba(16,102,56,0.12);
-}
-
-.hero::before,
-.hero::after {
-    content: "";
-    position: absolute;
-    z-index: -1;
-    border: 2px solid rgba(255,255,255,0.13);
-    border-radius: 50%;
-    pointer-events: none;
-}
-
-.hero::before {
-    width: 200px;
-    height: 200px;
-    top: -150px;
-    right: -60px;
-}
-
-.hero::after {
-    width: 220px;
-    height: 220px;
-    bottom: -25px;
-    left: -55px;
-}
-
-.hero h2 {
-    width: 100%;
-    max-width: 800px;
-    margin: 0 auto 12px;
-
-    color: #FFFFFF;
-    font-size: clamp(27px, 3.5vw, 36px);
-    font-weight: 600;
-    line-height: 1.3;
-    letter-spacing: -0.5px;
-    text-align: center;
-}
-
-.hero p {
-    width: 100%;
-    max-width: 1000px;
-    margin: 0 auto;
-
-    color: #EAF4ED;
-    font-size: 14px;
-    font-weight: 400;
-    line-height: 1.7;
-    text-align: center;
-}
-
-.container {
-    width: 92%;
-    max-width: 1200px;
-    margin: 38px auto;
-}
-
-.panel {
-    padding: 28px;
-    margin-bottom: 26px;
-
-    background: #FFFFFF;
-    border: 1px solid #DCE5DF;
-    border-radius: 16px;
-
-    box-shadow: 0 5px 18px rgba(38,52,69,0.055);
-}
-
-.panel h2 {
-    margin-top: 0;
-    margin-bottom: 12px;
-
-    color: #106638;
-    font-size: 22px;
-    font-weight: 800;
-}
-
-.panel > p {
-    color: #657386;
-    font-size: 14px;
-}
-
-label {
-    display: block;
-    margin: 18px 0 8px;
-
-    color: #263445;
-    font-size: 14px;
-    font-weight: 600;
-}
-
-input,
-textarea,
-select {
-    display: block;
-    width: 100%;
-    padding: 13px 14px;
-
-    color: #263445;
-    background: #FFFFFF;
-
-    border: 1px solid #DCE5DF;
-    border-radius: 9px;
-
-    font-family: inherit;
-    font-size: 14px;
-
-    outline: none;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-input:focus,
-textarea:focus,
-select:focus {
-    border-color: #16834A;
-    box-shadow: 0 0 0 3px rgba(22,131,74,0.10);
-}
-
-textarea {
-    min-height: 130px;
-    resize: vertical;
-    line-height: 1.6;
-}
-
-button,
-.button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-
-    padding: 12px 21px;
-    margin-top: 16px;
-
-    color: #FFFFFF;
-    background: #16834A;
-
-    border: none;
-    border-radius: 9px;
-
-    font-family: inherit;
-    font-size: 14px;
-    font-weight: 600;
-
-    text-decoration: none;
-    cursor: pointer;
-
-    transition: background 0.2s ease,
-                transform 0.2s ease,
-                box-shadow 0.2s ease;
-}
-
-button:hover,
-.button:hover {
-    background: #106638;
-    transform: translateY(-2px);
-    box-shadow: 0 5px 12px rgba(16,102,56,0.15);
-}
-
-.notice {
-    padding: 14px 16px;
-    margin-bottom: 20px;
-
-    color: #106638;
-    background: #E8F5EC;
-
-    border: 1px solid #C8E5D0;
-    border-radius: 9px;
-
-    font-size: 14px;
-}
-
-.notice.error {
-    color: #8A1C13;
-    background: #FCE8E6;
-    border-color: #F3C6C2;
-}
-
-.discussion {
-    padding: 23px;
-    margin-top: 18px;
-
-    background: #FFFFFF;
-    border: 1px solid #DCE5DF;
-    border-left: 4px solid #16834A;
-    border-radius: 12px;
-
-    overflow-wrap: anywhere;
-
-    transition: box-shadow 0.25s ease,
-                border-color 0.25s ease;
-}
-
-.discussion:hover {
-    border-color: #B8DCC4;
-    box-shadow: 0 6px 18px rgba(38,52,69,0.07);
-}
-
-.discussion h3 {
-    margin: 0 0 10px;
-
-    color: #174A8B;
-    font-size: 19px;
-    font-weight: 700;
-    line-height: 1.4;
-}
-
-.discussion p {
-    color: #455568;
-    font-size: 14px;
-    line-height: 1.8;
-    overflow-wrap: anywhere;
-}
-
-.meta {
-    margin-bottom: 13px;
-
-    color: #657386;
-    font-size: 12px;
-    line-height: 1.7;
-}
-
-.discussion .discussion {
-    padding: 17px;
-    margin: 18px 0 0 15px;
-
-    background: #F3F6F5;
-    border: 1px solid #DCE5DF;
-    border-left: 3px solid #174A8B;
-    border-radius: 10px;
-
-    box-shadow: none;
-}
-
-.discussion .discussion:hover {
-    background: #EEF4F0;
-}
-
-.discussion .discussion strong {
-    color: #174A8B;
-    font-size: 14px;
-}
-
-.discussion .discussion p {
-    margin-bottom: 0;
-}
-
-.discussion form {
-    margin-top: 20px;
-    padding-top: 16px;
-    border-top: 1px solid #E5ECE7;
-}
-
-@media (max-width: 768px) {
-
-    .container {
-        width: 94%;
-        margin: 25px auto;
-    }
-
-    .panel {
-        padding: 22px;
-    }
-
-    .hero {
-        min-height: 250px;
-        padding: 38px 20px;
-    }
-
-    .hero h2 {
-        font-size: 30px;
-    }
-
-    .hero p {
-        max-width: 560px;
-        font-size: 13px;
-    }
-
-    .discussion {
-        padding: 19px;
-    }
-}
-
-@media (max-width: 600px) {
-
-    .container {
-        width: 94%;
-        margin: 20px auto;
-    }
-
-    .hero {
-        min-height: 240px;
-        padding: 35px 18px;
-    }
-
-    .hero h2 {
-        font-size: 27px;
-    }
-
-    .hero p {
-        font-size: 13px;
-        line-height: 1.6;
-    }
-
-    .panel {
-        padding: 18px;
-        border-radius: 13px;
-    }
-
-    .panel h2 {
-        font-size: 19px;
-    }
-
-    .discussion {
-        padding: 17px;
-    }
-
-    .discussion h3 {
-        font-size: 17px;
-    }
-
-    .discussion .discussion {
-        margin-left: 8px;
-        padding: 14px;
-    }
-
-    button,
-    .button {
-        max-width: 100%;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-        transition: none !important;
-    }
-}
-
-.sc-forum-label {
-    display: inline-block;
-    margin-bottom: 12px;
-    padding: 11px 18px;
-    color: #106638;
-    background: #f1f5f2;
-    border: 1px solid #DCE5DF;
-    border-radius: 30px;
-    font-size: 14px;
-    font-weight: 700;
-    letter-spacing: 1.4px;
-    text-transform:none;
-}
-.sc-forum-label1 {
-    display: inline-block;
-    margin-bottom: 12px;
-    padding: 11px 18px;
-    color: #263445;
-    background: #eceeef;
-    border: 1px solid #bfd7f7;
-    border-radius: 30px;
-    font-size: 18px;
-    font-weight: 700;
-    letter-spacing: 1.4px;
-    text-transform:none;
-}
-
-</style>
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #F3F6F5;
+            background-image:
+                linear-gradient(rgba(243, 246, 245, 0.5), rgba(243, 246, 245, 0.5)),
+                url("assets/studycircle3.jpg");
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+
+        .hero {
+            position: relative;
+            isolation: isolate;
+            overflow: hidden;
+
+            min-height: 260px;
+            padding: 42px 24px;
+
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+
+            text-align: center;
+
+            background:
+                radial-gradient(circle at 12% 15%, rgba(255,255,255,0.13), transparent 28%),
+                radial-gradient(circle at 88% 85%, rgba(255,255,255,0.12), transparent 28%),
+                linear-gradient(120deg, #106638, #16834A);
+
+            box-shadow: 0 10px 25px rgba(16,102,56,0.12);
+        }
+
+        .hero::before,
+        .hero::after {
+            content: "";
+            position: absolute;
+            z-index: -1;
+            border: 2px solid rgba(255,255,255,0.13);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .hero::before {
+            width: 200px;
+            height: 200px;
+            top: -150px;
+            right: -60px;
+        }
+
+        .hero::after {
+            width: 220px;
+            height: 220px;
+            bottom: -25px;
+            left: -55px;
+        }
+
+        .hero h1 {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto 12px;
+
+            color: #FFFFFF;
+            font-weight: 600;
+            line-height: 1.3;
+            letter-spacing: -0.5px;
+            text-align: center;
+        }
+
+        .hero p {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+
+            color: #EAF4ED;
+            font-size: 14px;
+            font-weight: 400;
+            line-height: 1.7;
+            text-align: center;
+        }
+
+        .container {
+            width: 92%;
+            max-width: 1200px;
+            margin: 38px auto;
+        }
+
+        .panel {
+            padding: 28px;
+            margin-bottom: 26px;
+
+            background: #FFFFFF;
+            border: 1px solid #DCE5DF;
+            border-radius: 16px;
+
+            box-shadow: 0 5px 18px rgba(38,52,69,0.055);
+        }
+
+        .panel h2 {
+            margin-top: 0;
+            margin-bottom: 12px;
+
+            color: #106638;
+            font-size: 22px;
+            font-weight: 800;
+        }
+
+        .panel > p {
+            color: #657386;
+            font-size: 14px;
+        }
+
+        label {
+            display: block;
+            margin: 18px 0 8px;
+
+            color: #263445;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        input,
+        textarea,
+        select {
+            display: block;
+            width: 100%;
+            padding: 13px 14px;
+
+            color: #263445;
+            background: #FFFFFF;
+
+            border: 1px solid #DCE5DF;
+            border-radius: 9px;
+
+            font-family: inherit;
+            font-size: 14px;
+
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            border-color: #16834A;
+            box-shadow: 0 0 0 3px rgba(22,131,74,0.10);
+        }
+
+        textarea {
+            min-height: 130px;
+            resize: vertical;
+            line-height: 1.6;
+        }
+
+        button,
+        .button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            padding: 12px 21px;
+            margin-top: 16px;
+
+            color: #FFFFFF;
+            background: #16834A;
+
+            border: none;
+            border-radius: 9px;
+
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+
+            text-decoration: none;
+            cursor: pointer;
+
+            transition: background 0.2s ease,
+                        transform 0.2s ease,
+                        box-shadow 0.2s ease;
+        }
+
+        button:hover,
+        .button:hover {
+            background: #106638;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 12px rgba(16,102,56,0.15);
+        }
+
+        .notice {
+            padding: 14px 16px;
+            margin-bottom: 20px;
+
+            color: #106638;
+            background: #E8F5EC;
+
+            border: 1px solid #C8E5D0;
+            border-radius: 9px;
+
+            font-size: 14px;
+        }
+
+        .notice.error {
+            color: #8A1C13;
+            background: #FCE8E6;
+            border-color: #F3C6C2;
+        }
+
+        .discussion {
+            padding: 23px;
+            margin-top: 18px;
+
+            background: #FFFFFF;
+            border: 1px solid #DCE5DF;
+            border-left: 4px solid #16834A;
+            border-radius: 12px;
+
+            overflow-wrap: anywhere;
+
+            transition: box-shadow 0.25s ease,
+                        border-color 0.25s ease;
+        }
+
+        .discussion:hover {
+            border-color: #B8DCC4;
+            box-shadow: 0 6px 18px rgba(38,52,69,0.07);
+        }
+
+        .discussion h3 {
+            margin: 0 0 10px;
+
+            color: #174A8B;
+            font-size: 19px;
+            font-weight: 700;
+            line-height: 1.4;
+        }
+
+        .discussion p {
+            color: #455568;
+            font-size: 14px;
+            line-height: 1.8;
+            overflow-wrap: anywhere;
+        }
+
+        .meta {
+            margin-bottom: 13px;
+
+            color: #657386;
+            font-size: 12px;
+            line-height: 1.7;
+        }
+
+        .discussion .discussion {
+            padding: 17px;
+            margin: 18px 0 0 15px;
+
+            background: #F3F6F5;
+            border: 1px solid #DCE5DF;
+            border-left: 3px solid #174A8B;
+            border-radius: 10px;
+
+            box-shadow: none;
+        }
+
+        .discussion .discussion:hover {
+            background: #EEF4F0;
+        }
+
+        .discussion .discussion strong {
+            color: #174A8B;
+            font-size: 14px;
+        }
+
+        .discussion .discussion p {
+            margin-bottom: 0;
+        }
+
+        .discussion form {
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid #E5ECE7;
+        }
+
+        @media (max-width: 768px) {
+
+            .container {
+                width: 94%;
+                margin: 25px auto;
+            }
+
+            .panel {
+                padding: 22px;
+            }
+
+            .hero {
+                min-height: 250px;
+                padding: 38px 20px;
+            }
+
+            .hero h1 {
+                font-size: 30px;
+            }
+
+            .hero p {
+                max-width: 560px;
+                font-size: 13px;
+            }
+
+            .discussion {
+                padding: 19px;
+            }
+        }
+
+        @media (max-width: 600px) {
+
+            .container {
+                width: 94%;
+                margin: 20px auto;
+            }
+
+            .hero {
+                min-height: 240px;
+                padding: 35px 18px;
+            }
+
+            .hero h1 {
+                font-size: 27px;
+            }
+
+            .hero p {
+                font-size: 13px;
+                line-height: 1.6;
+            }
+
+            .panel {
+                padding: 18px;
+                border-radius: 13px;
+            }
+
+            .panel h2 {
+                font-size: 19px;
+            }
+
+            .discussion {
+                padding: 17px;
+            }
+
+            .discussion h3 {
+                font-size: 17px;
+            }
+
+            .discussion .discussion {
+                margin-left: 8px;
+                padding: 14px;
+            }
+
+            button,
+            .button {
+                max-width: 100%;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                transition: none !important;
+            }
+        }
+
+        .sc-forum-label {
+            display: inline-block;
+            margin-bottom: 12px;
+            padding: 11px 18px;
+            color: #106638;
+            background: #f1f5f2;
+            border: 1px solid #DCE5DF;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 1.4px;
+            text-transform:none;
+        }
+
+        .sc-forum-label1 {
+            display: inline-block;
+            margin-bottom: 12px;
+            padding: 11px 18px;
+            color: #263445;
+            background: #eceeef;
+            border: 1px solid #bfd7f7;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 1.4px;
+            text-transform:none;
+        }
+
+        .reply-delete-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 7px 12px;
+            margin-top: 8px;
+            color: #A52820;
+            background: #FFF5F4;
+            border: 1px solid #E6B8B5;
+            border-radius: 7px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .reply-delete-button:hover {
+            color: #A52820;
+            background: #FCE8E6;
+            border-color: #D98C86;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .discussion-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: nowrap;
+            margin-top: 8px;
+            flex-direction: row;
+            align-items: center;
+        }
+
+        .discussion-delete-button {
+            margin-top: 0;
+            padding: 8px 13px;
+            color: #A52820;
+            background: #FFF5F4;
+            border: 1px solid #E6B8B5;
+            border-radius: 7px;
+            font-size: 12px;
+        }
+
+        .discussion-delete-button:hover {
+            color: #A52820;
+            background: #FCE8E6;
+            border-color: #D98C86;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .discussion-edit-details {
+            margin-top: 21px;
+        }
+
+        .discussion-edit-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 13px;
+            color: #174A8B;
+            background: #EEF4FC;
+            border: 1px solid #BFD7F7;
+            border-radius: 7px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            list-style: none;
+        }
+
+        .discussion-edit-button::-webkit-details-marker {
+            display: none;
+        }
+
+        .discussion-edit-button:hover {
+            background: #E0EBFA;
+        }
+
+        .discussion-edit-details form {
+            margin-top: 14px;
+            padding: 18px;
+            background: #F7FAFC;
+            border: 1px solid #DCE5DF;
+            border-radius: 10px;
+        }
+
+        .discussion-edit-details textarea {
+            min-height: 120px;
+        }
+
+    </style>
 
 </head>
 
@@ -719,7 +975,7 @@ button:hover,
 
 <section class="hero">
 
-    <h2>Discussion Forum</h2>
+    <h1>Discussion Forum</h1>
     <p>
         Welcome to the NSBM StudyCircle Academic Forum! This is a place where 
         students can ask questions, share ideas, and discuss academic subjects 
@@ -824,6 +1080,89 @@ button:hover,
 
                     <h3><?= e($discussion["title"]) ?></h3>
 
+                    <?php if (
+                        $isAdmin ||
+                        ($isStudent && (int)$discussion["user_id"] === (int)$_SESSION["user_id"])
+                    ): ?>
+
+                        <div class="discussion-actions">
+
+                            <form
+                                method="POST"
+                                action="forum.php"
+                                onsubmit="return confirm('Are you sure you want to delete this discussion and all its replies?');"
+                            >
+                                <input
+                                    type="hidden"
+                                    name="csrf_token"
+                                    value="<?= e($_SESSION["forum_csrf"]) ?>"
+                                >
+
+                                <input type="hidden" name="delete_discussion" value="1">
+
+                                <input
+                                    type="hidden"
+                                    name="discussion_id"
+                                    value="<?= (int)$discussion["discussion_id"] ?>"
+                                >
+
+                                <button type="submit" class="discussion-delete-button">
+                                    Delete Discussion
+                                </button>
+                            </form>
+
+                            <details class="discussion-edit-details">
+
+                                <summary class="discussion-edit-button">
+                                    Edit Discussion
+                                </summary>
+
+                                <form method="POST" action="forum.php">
+
+                                    <input
+                                        type="hidden"
+                                        name="csrf_token"
+                                        value="<?= e($_SESSION["forum_csrf"]) ?>"
+                                    >
+
+                                    <input type="hidden" name="edit_discussion" value="1">
+
+                                    <input
+                                        type="hidden"
+                                        name="discussion_id"
+                                        value="<?= (int)$discussion["discussion_id"] ?>"
+                                    >
+
+                                    <label>Discussion Title</label>
+
+                                    <input
+                                        type="text"
+                                        name="edit_title"
+                                        maxlength="200"
+                                        required
+                                        value="<?= e($discussion["title"]) ?>"
+                                    >
+
+                                    <label>Discussion Message</label>
+
+                                    <textarea
+                                        name="edit_body"
+                                        maxlength="10000"
+                                        required
+                                    ><?= e($discussion["body"]) ?></textarea>
+
+                                    <button type="submit">
+                                        Save Changes
+                                    </button>
+
+                                </form>
+
+                            </details>
+
+                        </div>
+
+                    <?php endif; ?>
+
                     <div class="meta">
                         Posted by <?= e($discussion["author_name"] ?? "Student") ?>
                         · <?= e($discussion["subject_name"] ?? "General Discussion") ?>
@@ -838,7 +1177,8 @@ button:hover,
 
                     <?php
                     $replyStmt = $conn->prepare(
-                        "SELECT a.body, a.created_at, u.name AS author_name
+                        "SELECT a.answer_id, a.user_id, a.body, a.created_at,
+                                u.name AS author_name
                          FROM answers a
                          LEFT JOIN users u ON a.user_id = u.user_id
                          WHERE a.discussion_id = ?
@@ -854,6 +1194,42 @@ button:hover,
                             <strong><?= e($reply["author_name"] ?? "Student") ?></strong>
                             <div class="meta"><?= e($reply["created_at"]) ?></div>
                             <p><?= nl2br(e($reply["body"])) ?></p>
+                            <?php if (
+                                $isAdmin ||
+                                ($isStudent && (int)$reply["user_id"] === (int)$_SESSION["user_id"])
+                            ): ?>
+
+                                <form
+                                    method="POST"
+                                    action="forum.php"
+                                    onsubmit="return confirm('Are you sure you want to delete this reply?');"
+                                >
+                                    <input
+                                        type="hidden"
+                                        name="csrf_token"
+                                        value="<?= e($_SESSION["forum_csrf"]) ?>"
+                                    >
+
+                                    <input type="hidden" name="delete_reply" value="1">
+
+                                    <input
+                                        type="hidden"
+                                        name="answer_id"
+                                        value="<?= (int)$reply["answer_id"] ?>"
+                                    >
+
+                                    <input
+                                        type="hidden"
+                                        name="discussion_id"
+                                        value="<?= (int)$discussion["discussion_id"] ?>"
+                                    >
+
+                                    <button type="submit" class="reply-delete-button">
+                                        Delete Reply
+                                    </button>
+                                </form>
+
+                            <?php endif; ?>
                         </div>
                     <?php endwhile; ?>
 

@@ -1324,3 +1324,25 @@ button:hover,
         font-size: 20px;
     }
 }
+
+.comment-delete-form {
+    margin-top: 9px;
+}
+
+.comment-delete-button {
+    padding: 6px 11px;
+    border: 1px solid #E6B8B5;
+    border-radius: 7px;
+    background: #FFF5F4;
+    color: #A52820;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.comment-delete-button:hover {
+    background: #FCE8E6;
+    border-color: #D98C86;
+}

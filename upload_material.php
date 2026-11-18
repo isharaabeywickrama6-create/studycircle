@@ -442,11 +442,15 @@ $success = isset($_GET["success"]) && $_GET["success"] === "1";
         }
 
         .hero h1 {
-            margin: 0 0 10px;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto 12px;
+
             color: #FFFFFF;
-            font-size: 34px;
+            font-weight: 600;
             line-height: 1.3;
-            text-justify: center;
+            letter-spacing: -0.5px;
+            text-align: center;
         }
 
         .hero p {
@@ -731,7 +735,7 @@ $success = isset($_GET["success"]) && $_GET["success"] === "1";
             }
 
             .hero h1 {
-                font-size: 27px;
+                font-size: 30px;
             }
 
             .hero p {
@@ -755,7 +759,7 @@ $success = isset($_GET["success"]) && $_GET["success"] === "1";
             }
 
             .hero h1 {
-                font-size: 24px;
+                font-size: 30px;
             }
 
             .page-intro h2 {
