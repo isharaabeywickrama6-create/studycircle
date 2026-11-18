@@ -29,8 +29,6 @@ $scLogoutLink = $scBase . 'logout.php';
 
 <header class="sc-site-header">
 
-    <link rel="icon" type="image/png" href="assets/studycircle-icon.png">
-
     <a class="sc-brand" href="<?= htmlspecialchars($scHomeLink, ENT_QUOTES, 'UTF-8') ?>">
         <img src="<?= $scBase ?>assets/studycircle-icon.png"
              alt="StudyCircle Logo"
@@ -180,6 +178,19 @@ $scLogoutLink = $scBase . 'logout.php';
 </div>
 
 </header>
+
+<script>
+(function () {
+    const favicon = document.createElement('link');
+
+    favicon.rel = 'icon';
+    favicon.type = 'image/png';
+
+    favicon.href = <?= json_encode($scBase . 'assets/studycircle-icon-favicon.png') ?> + '?v=2';
+
+    document.head.appendChild(favicon);
+})();
+</script>
 
 <script>
 document.addEventListener("click", function(event) {
